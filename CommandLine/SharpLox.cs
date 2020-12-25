@@ -25,7 +25,7 @@ namespace SharpLox
         private static void RunFile(string path)
         {
             var prog = File.ReadAllText(Path.GetFullPath(path));
-            //Run(prog);
+            Run(prog);
             if (ErrorState)
             {
                 Environment.Exit(65);
@@ -34,6 +34,9 @@ namespace SharpLox
 
         private static void RunPrompt()
         {
+            Console.WriteLine("Sharplox Version 0.1 (Alpha)");
+            Console.WriteLine("Sharplox REPL initialized:");
+            
             while (true)
             {
                 Console.Write(PromptStr);

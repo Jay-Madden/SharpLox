@@ -14,6 +14,7 @@ namespace Interpreter.Lexing
         public const char Semicolon = ';';
         public const char Slash = '/';
         public const char Star = '*';
+        public const char DoubleQuote = '"';
 
         // One or two character tokens.
         public const char Not = '!';
@@ -21,23 +22,7 @@ namespace Interpreter.Lexing
         public const char Greater = '>';
         public const char Lesser = '<';
 
-        // Keywords.
-        public const string And = "and";
-        public const string Class = "class";
-        public const string Else = "else";
-        public const string False = "false";
-        public const string Func = "func";
-        public const string For = "for";
-        public const string If = "if";
-        public const string Nil = "nil";
-        public const string Or = "or";
-        public const string Print = "print";
-        public const string Return = "return";
-        public const string Super = "super";
-        public const string This = "this";
-        public const string True = "true";
-        public const string Var = "var";
-        public const string While = "while";
+
 
         public const char Space = ' ';
         public const char Carriage = '\r';
