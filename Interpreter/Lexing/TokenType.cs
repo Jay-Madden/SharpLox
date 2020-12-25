@@ -49,6 +49,8 @@ namespace Interpreter.Lexing
         Number,
         
         Comment,
+        NewLine,
+        WhiteSpace,
         Eof
     }
 }

@@ -18,7 +18,7 @@ namespace SharpLox
             }
             else
             {
-                //RunPrompt();
+                RunPrompt();
             }
         }
 

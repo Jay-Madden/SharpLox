@@ -15,7 +15,7 @@ namespace Interpreter.Lexing
 
         private readonly List<Token> Tokens = new();
         
-        private bool IsAtEnd => Current > Source.Length;
+        private bool IsAtEnd => Current >= Source.Length;
 
         public Lexer(string source, Action<int, string> errorHandler)
         {
@@ -35,12 +35,20 @@ namespace Interpreter.Lexing
                     continue;
                 }
                 
-                if(token.Type == TokenType.Comment)
+                switch (token.Type)
                 {
-                    continue;
+                    case TokenType.Comment:
+                    case TokenType.WhiteSpace:
+                        break;
+                    case TokenType.NewLine:
+                        Line++;
+                        break;
+                    default:
+                        Tokens.Add(token);
+                        break;
                 }
-                Tokens.Add(token);
             }
+            
             Tokens.Add(new Token(TokenType.Eof, "", null!, Line));
             return Tokens;
         }
@@ -89,21 +97,30 @@ namespace Interpreter.Lexing
                         LookAhead(TokenChars.Equal) ?
                             TokenType.LessEqual :
                             TokenType.Less);
-                case TokenChars.Slash when LookAhead(TokenChars.Slash):
-                {
-                    while (PeekAhead() != TokenChars.NewLine && !IsAtEnd)
-                    {
-                        Advance();
-                    }
-                    return CreateToken(TokenType.Comment);
-                }
                 case TokenChars.Slash:
-                {
-                    return CreateToken(TokenType.Slash);
-                }
+                    return Comment();
+                case TokenChars.Space:
+                case TokenChars.Carriage:
+                case TokenChars.Tab:
+                    return CreateToken(TokenType.WhiteSpace);
+                case TokenChars.NewLine:
+                    return CreateToken(TokenType.NewLine);
                 default:
                     return null;
             }
+        }
+        
+        private Token Comment()
+        {
+            if(LookAhead(TokenChars.Slash))
+            {
+                while (PeekAhead() != TokenChars.NewLine && !IsAtEnd)
+                {
+                    Advance();
+                }
+                return CreateToken(TokenType.Comment);
+            }
+            return CreateToken(TokenType.Slash);
         }
         
         private bool LookAhead(char expected) {
