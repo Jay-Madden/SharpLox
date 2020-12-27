@@ -6,31 +6,31 @@ namespace Interpreter.Lexing
 {
     public class Lexer
     {
-        private int Start;
-        private int Current;
-        private int Line = 1;
+        private int _start;
+        private int _current;
+        private int _line = 1;
 
-        private readonly Action<int, string> ErrorHandler;
+        private readonly Action<int, string> _errorHandler;
         
-        private readonly string Source;
+        private readonly string _source;
 
-        private readonly List<Token> Tokens = new();
+        private readonly List<Token> _tokens = new();
 
-        private string CurrentLexeme => Source[Start..Current];
+        private string _currentLexeme => _source[_start.._current];
         
-        private bool IsAtEnd => Current >= Source.Length;
+        private bool _isAtEnd => _current >= _source.Length;
 
         public Lexer(string source, Action<int, string> errorHandler)
         {
-            Source = source;
-            ErrorHandler = errorHandler;
+            _source = source;
+            _errorHandler = errorHandler;
         }
 
         public List<Token> LexTokens()
         {
-            while (!IsAtEnd)
+            while (!_isAtEnd)
             {
-                Start = Current;
+                _start = _current;
                 var token = LexToken();
                 if (token is null)
                 {
@@ -43,16 +43,16 @@ namespace Interpreter.Lexing
                     case TokenType.WhiteSpace:
                         break;
                     case TokenType.NewLine:
-                        Line++;
+                        _line++;
                         break;
                     default:
-                        Tokens.Add(token);
+                        _tokens.Add(token);
                         break;
                 }
             }
             
-            Tokens.Add(new Token(TokenType.Eof, "", null!, Line));
-            return Tokens;
+            _tokens.Add(new Token(TokenType.Eof, "", null!, _line));
+            return _tokens;
         }
 
         private Token? LexToken()
@@ -114,7 +114,7 @@ namespace Interpreter.Lexing
                 case { } c when char.IsLetter(c):
                     return Identifier();
                 default:
-                    ErrorHandler(Line, "Unexpected Character");
+                    _errorHandler(_line, "Unexpected Character");
                     return null;
             }
         }
@@ -126,7 +126,7 @@ namespace Interpreter.Lexing
                 Advance();
             }
 
-            if (ReservedKeywords.Keywords.TryGetValue(CurrentLexeme, out var keyword))
+            if (ReservedKeywords.Keywords.TryGetValue(_currentLexeme, out var keyword))
             {
                 return CreateToken(keyword);
             }
@@ -150,20 +150,20 @@ namespace Interpreter.Lexing
                 }
             }
 
-            if (!double.TryParse(CurrentLexeme, out var val))
+            if (!double.TryParse(_currentLexeme, out var val))
             {
-                ErrorHandler(Line, "Invalid number literal provided");
+                _errorHandler(_line, "Invalid number literal provided");
                 return null;
             }
 
-            return CreateToken(TokenType.Number, CurrentLexeme);
+            return CreateToken(TokenType.Number, _currentLexeme);
         }
         private Token Comment()
         {
             if(PeekAhead() == TokenChars.Slash)
             {
                 Advance();
-                while (PeekAhead() != TokenChars.NewLine && !IsAtEnd)
+                while (PeekAhead() != TokenChars.NewLine && !_isAtEnd)
                 {
                     Advance();
                 }
@@ -172,7 +172,7 @@ namespace Interpreter.Lexing
             else if (PeekAhead() == TokenChars.Star)
             {
                 Advance();
-                while (!IsAtEnd && PeekAhead() != TokenChars.Star && PeekNext() != TokenChars.Slash)
+                while (!_isAtEnd && PeekAhead() != TokenChars.Star && PeekNext() != TokenChars.Slash)
                 {
                     Advance();
                 }
@@ -184,56 +184,56 @@ namespace Interpreter.Lexing
 
         private Token? String()
         {
-            while (PeekAhead() != TokenChars.DoubleQuote && !IsAtEnd)
+            while (PeekAhead() != TokenChars.DoubleQuote && !_isAtEnd)
             {
                 if (PeekAhead() == TokenChars.NewLine)
                 {
-                    Line++;
+                    _line++;
                 }
                 Advance();
             }
 
-            if (IsAtEnd)
+            if (_isAtEnd)
             {
-                ErrorHandler(Line, "Unterminated String");
+                _errorHandler(_line, "Unterminated String");
                 return null;
             }
 
             Advance();
 
             //Return the created token with the value of the string and the "" trimmed off the ends
-            return CreateToken(TokenType.String, Source[(Start + 1)..(Current - 1)]);
+            return CreateToken(TokenType.String, _source[(_start + 1)..(_current - 1)]);
         }
         
         private bool LookAhead(char expected) {
-            if (IsAtEnd || Source[Current] != expected)
+            if (_isAtEnd || _source[_current] != expected)
             {
                 return false;
             }
 
-            Current++;
+            _current++;
             return true;
         }
         
-        private char PeekAhead() => IsAtEnd ? '\0' : Source[Current];
+        private char PeekAhead() => _isAtEnd ? '\0' : _source[_current];
         
         private char PeekNext() {
-            if (Current + 1 >= Source.Length)
+            if (_current + 1 >= _source.Length)
             {
                 return '\0';
             }
-            return Source[Current + 1];
+            return _source[_current + 1];
         } 
 
         private Token CreateToken(TokenType type)
-            => new(type, CurrentLexeme, null!, Line);
+            => new(type, _currentLexeme, null!, _line);
         
         private Token CreateToken(TokenType type, string source)
-            => new(type, source, null!, Line);
+            => new(type, source, null!, _line);
         
         private char Advance(int count=1) {
-            Current += count;
-            return Source[Current - 1];
+            _current += count;
+            return _source[_current - 1];
         }
     }
 }
