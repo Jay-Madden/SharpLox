@@ -18,8 +18,8 @@ namespace Interpreter.Parsing.Productions
             }
             else
             {
-                Console.Write("|-");
-                indent += "| ";
+                Console.Write("├─ ");
+                indent += "│ ";
             }
             return indent;
         }

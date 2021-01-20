@@ -11,8 +11,7 @@ namespace Interpreter.Parsing.Productions
 
        public override void PrintNode(string indent, bool last)
        {
-            indent = ShowIndent(indent, true); 
-            Console.WriteLine($"{GetType().Name} {Value}");
+            Console.WriteLine($"{indent} {GetType().Name} {Value}");
        }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Interpreter.Lexing;
+using Interpreter.Parsing;
 
 namespace SharpLox
 {
@@ -50,20 +51,36 @@ namespace SharpLox
                 ErrorState = false;
             }
         }
+        
         private static void Run(string source)
         {
-            var lexer = new Lexer(source, Error);
+            var lexer = new Lexer(source, LexError);
             var tokens = lexer.LexTokens();
 
-            // For now, just print the tokens.
-            foreach(var token in tokens) {
-                Console.WriteLine(token);
+            var parser = new Parser(tokens, ParseError);
+            var expression = parser.Parse();
+
+            if (ErrorState)
+            {
+                return;
             }
+            
+            expression?.PrintNode("", false);
+
         }
 
-        public static void Error(int line, string error)
+        public static void LexError(int line, string error)
         {
             Report(line, "", error);
+        }
+        
+        private static void ParseError(Token token, string message) 
+        {
+            Report(token.Line, 
+                token.Type == TokenType.Eof ?
+                    " at end" :
+                    $" at '{token.Lexeme}'",
+                message);
         }
 
         public static void Report(int line, string where, string message)

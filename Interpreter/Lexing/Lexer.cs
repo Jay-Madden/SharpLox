@@ -150,7 +150,7 @@ namespace Interpreter.Lexing
                 }
             }
 
-            if (!double.TryParse(_currentLexeme, out var val))
+            if (!double.TryParse(_currentLexeme, out _))
             {
                 _errorHandler(_line, "Invalid number literal provided");
                 return null;
@@ -229,7 +229,7 @@ namespace Interpreter.Lexing
             => new(type, _currentLexeme, null!, _line);
         
         private Token CreateToken(TokenType type, string source)
-            => new(type, source, null!, _line);
+            => new(type, source, source, _line);
         
         private char Advance(int count=1) {
             _current += count;
