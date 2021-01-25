@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Interpreter.Lexing
+namespace Runtime.Lexing
 {
     public class Lexer
     {
@@ -79,6 +79,10 @@ namespace Interpreter.Lexing
                     return CreateToken(TokenType.Star);
                 case TokenChars.Semicolon:
                     return CreateToken(TokenType.Semicolon);
+                case TokenChars.Question:
+                    return CreateToken(TokenType.Question);
+                case TokenChars.Colon:
+                    return CreateToken(TokenType.Colon);
                 case TokenChars.Not:
                     return CreateToken(
                         LookAhead(TokenChars.Equal) ?

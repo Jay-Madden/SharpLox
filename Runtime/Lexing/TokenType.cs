@@ -1,4 +1,4 @@
-namespace Interpreter.Lexing 
+namespace Runtime.Lexing 
 {
     public enum TokenType
     {
@@ -14,6 +14,8 @@ namespace Interpreter.Lexing
         Semicolon,
         Slash,
         Star,
+        Question,
+        Colon,
 
         // One or two character tokens.
         Not,

@@ -1,7 +1,7 @@
 using System;
-using Interpreter.Parsing.Productions;
+using Runtime.Parsing.Productions;
 
-namespace Interpreter.Parsing
+namespace Runtime.Parsing
 {
     public class PrettyPrinter: ISyntaxTreeVisitor<string>
     {
@@ -17,6 +17,11 @@ namespace Interpreter.Parsing
         public string VisitBinary(Binary binary)
         {
             return $"(Binary {binary.Left} {binary.Right})";
+        }
+
+        public string VisitConditional(Ternary ternary)
+        {
+            return $"(Conditional {ternary.Condition} {ternary.TrueCase} {ternary.FalseCase}";
         }
 
         public string VisitGrouping(Grouping grouping)

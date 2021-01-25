@@ -1,6 +1,6 @@
 using System;
 
-namespace Interpreter.Parsing
+namespace Runtime.Parsing
 {
     public class ParseErrorException : Exception
     {

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
-using Interpreter.Lexing;
-using Interpreter.Parsing;
-using Interpreter.Parsing.Productions;
+using Runtime.Lexing;
+using Runtime.Parsing;
+using Runtime.Parsing.Productions;
 
 namespace SharpLox
 {

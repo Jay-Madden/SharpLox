@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using Interpreter.Lexing;
-using Interpreter.Parsing.Productions;
+using Runtime.Lexing;
+using Runtime.Parsing.Productions;
 
-namespace Interpreter.Parsing
+namespace Runtime.Parsing
 {
     public class Parser
     {
@@ -15,7 +15,7 @@ namespace Interpreter.Parsing
 
         private bool _isAtEnd => Peek().Type == TokenType.Eof;
 
-        private Action<Token, string> _errorCallBack;
+        private readonly Action<Token, string> _errorCallBack;
 
         public Parser(IEnumerable<Token> tokens, Action<Token, string> errCallback)
         {
@@ -37,7 +37,26 @@ namespace Interpreter.Parsing
 
         private Expression Expression()
         {
-            return Equality();
+            return Conditional();
+        }
+
+        private Expression Conditional()
+        {
+            var expr = Equality();
+            while(Match(TokenType.Question))
+            {
+                var trueCase = Conditional();
+                if (Match(TokenType.Colon))
+                {
+                    var falseCase = Conditional();
+                    expr = new Ternary(expr, trueCase, falseCase);
+                }
+                else
+                {
+                    _errorCallBack(Peek(), "Ternary operations are separated with a colon");
+                }
+            }
+            return expr;
         }
         
         private Expression Equality()
@@ -57,7 +76,8 @@ namespace Interpreter.Parsing
             while (Match(TokenType.Greater,
                     TokenType.GreaterEqual, 
                     TokenType.Less, 
-                    TokenType.LessEqual)) {
+                    TokenType.LessEqual)) 
+            {
                 var op = Previous();
                 var right = Additive();
                 expr = new Binary(expr, op, right);
@@ -68,7 +88,8 @@ namespace Interpreter.Parsing
         private Expression Additive()
         {
             var expr = Multiplicative(); 
-            while (Match(TokenType.Minus, TokenType.Plus)) {
+            while (Match(TokenType.Minus, TokenType.Plus))
+            {
                 var op = Previous();
                 var right = Multiplicative();
                 expr = new Binary(expr, op, right);
@@ -79,7 +100,8 @@ namespace Interpreter.Parsing
         private Expression Multiplicative()
         {
             var expr = Unary(); 
-            while (Match(TokenType.Star, TokenType.Slash)) {
+            while (Match(TokenType.Star, TokenType.Slash)) 
+            {
                 var op = Previous();
                 var right = Unary();
                 expr = new Binary(expr, op, right);
@@ -89,7 +111,8 @@ namespace Interpreter.Parsing
 
         private Expression Unary()
         {
-            if (Match(TokenType.Not, TokenType.Minus)) {
+            if (Match(TokenType.Not, TokenType.Minus)) 
+            {
                 var op = Previous();
                 var right = Unary();
                 return new Unary(op, right);
@@ -100,20 +123,24 @@ namespace Interpreter.Parsing
 
         private Expression Primary()
         {
-            if(Match(TokenType.False))
+            if (Match(TokenType.False))
             {
                 return new Literal(false);
             }
-            if(Match(TokenType.True))
+            if (Match(TokenType.True))
             {
                 return new Literal(true);
             }
-            if(Match(TokenType.Nil))
+            if (Match(TokenType.Nil))
             {
                 return new Literal(null!);
             }
 
-            if(Match(TokenType.Number, TokenType.String))
+            if(Match(TokenType.Number))
+            {
+                return new Literal(double.Parse((string)Previous().Literal));
+            }
+            if(Match(TokenType.String))
             {
                 return new Literal(Previous().Literal);
             }
@@ -200,14 +227,10 @@ namespace Interpreter.Parsing
         }
 
         private Token Peek()
-        {
-            return _tokens[_current];
-        }
+            => _tokens[_current];
         
         private Token Previous()
-        {
-            return _tokens[_current-1];
-        }
+            => _tokens[_current-1];
 
 
     }

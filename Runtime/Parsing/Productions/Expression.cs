@@ -1,6 +1,6 @@
 using System;
 
-namespace Interpreter.Parsing.Productions
+namespace Runtime.Parsing.Productions
 {
     public abstract record Expression
     {

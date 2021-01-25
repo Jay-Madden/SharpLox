@@ -1,7 +1,8 @@
 using System;
 using System.IO;
-using Interpreter.Lexing;
-using Interpreter.Parsing;
+using Runtime.Interpreting;
+using Runtime.Lexing;
+using Runtime.Parsing;
 
 namespace SharpLox
 {
@@ -64,8 +65,15 @@ namespace SharpLox
             {
                 return;
             }
-            
-            expression?.PrintNode("", false);
+
+            try
+            {
+                new Interpreter().Interpret(expression!);
+            }
+            catch (RuntimeError e)
+            {
+                Console.WriteLine(e);
+            }
 
         }
 

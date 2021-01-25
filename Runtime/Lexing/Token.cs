@@ -1,4 +1,4 @@
-namespace Interpreter.Lexing
+namespace Runtime.Lexing
 {
     public record Token
     {

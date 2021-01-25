@@ -1,4 +1,4 @@
-namespace Interpreter.Lexing
+namespace Runtime.Lexing
 {
     public class TokenChars
     {
@@ -15,6 +15,8 @@ namespace Interpreter.Lexing
         public const char Slash = '/';
         public const char Star = '*';
         public const char DoubleQuote = '"';
+        public const char Question = '?';
+        public const char Colon = ':';
 
         // One or two character tokens.
         public const char Not = '!';

@@ -1,7 +1,7 @@
 using System;
-using Interpreter.Lexing;
+using Runtime.Lexing;
 
-namespace Interpreter.Parsing.Productions
+namespace Runtime.Parsing.Productions
 {
     public record Binary(Expression Left, Token Token, Expression Right): Expression
     {

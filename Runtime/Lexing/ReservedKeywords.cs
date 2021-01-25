@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Interpreter.Lexing
+namespace Runtime.Lexing
 {
     public class ReservedKeywords
     {
