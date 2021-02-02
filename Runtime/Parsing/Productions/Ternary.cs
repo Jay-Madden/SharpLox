@@ -3,7 +3,7 @@ using Runtime.Lexing;
 
 namespace Runtime.Parsing.Productions
 {
-    public record Ternary(Expression? Condition, Expression? TrueCase, Expression? FalseCase) : Expression
+    public record Ternary(Expression Condition, Expression TrueCase, Expression FalseCase) : Expression
     {
         public override T Accept<T>(ISyntaxTreeVisitor<T> visitor)
         {

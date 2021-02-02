@@ -57,6 +57,7 @@ namespace SharpLox
                 }
 
                 Run(line);
+                Console.WriteLine();
                 ErrorState = false;
             }
         }
@@ -67,16 +68,17 @@ namespace SharpLox
             var tokens = lexer.LexTokens();
 
             var parser = new Parser(tokens, ParseError);
-            var ast = parser.Parse();
-
-            if (ErrorState)
-            {
-                return;
-            }
-
             try
             {
+                var ast = parser.Parse();
+                if (ErrorState)
+                {
+                    return;
+                }
                 new Interpreter().Interpret(ast);
+            }
+            catch (ParseErrorException)
+            {
             }
             catch (RuntimeErrorException e)
             {

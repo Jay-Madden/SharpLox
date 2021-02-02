@@ -2,7 +2,7 @@ using System;
 
 namespace Runtime.Parsing.Productions
 {
-    public record Grouping(Expression? Expression) : Expression
+    public record Grouping(Expression Expression) : Expression
     {
         public override T Accept<T>(ISyntaxTreeVisitor<T> visitor)
         {

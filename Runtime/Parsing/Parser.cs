@@ -63,12 +63,12 @@ namespace Runtime.Parsing
             return new ExpressionStatement(expression);
         }
 
-        private Expression? ParseExpression()
+        private Expression ParseExpression()
         {
             return ParseConditional();
         }
 
-        private Expression? ParseConditional()
+        private Expression ParseConditional()
         {
             var expr = ParseEquality();
             while(Match(TokenType.Question))
@@ -87,7 +87,7 @@ namespace Runtime.Parsing
             return expr;
         }
         
-        private Expression? ParseEquality()
+        private Expression ParseEquality()
         {
             var expr = ParseComparison(); 
             while (Match(TokenType.EqualCompare, TokenType.NotEqual)) {
@@ -98,7 +98,7 @@ namespace Runtime.Parsing
             return expr;
         }
 
-        private Expression? ParseComparison()
+        private Expression ParseComparison()
         {
             var expr = ParseAdditive(); 
             while (Match(TokenType.Greater,
@@ -113,7 +113,7 @@ namespace Runtime.Parsing
             return expr;
         }
 
-        private Expression? ParseAdditive()
+        private Expression ParseAdditive()
         {
             var expr = ParseMultiplicative(); 
             while (Match(TokenType.Minus, TokenType.Plus))
@@ -125,10 +125,10 @@ namespace Runtime.Parsing
             return expr;
         }
 
-        private Expression? ParseMultiplicative()
+        private Expression ParseMultiplicative()
         {
             var expr = ParseUnary(); 
-            while (Match(TokenType.Star, TokenType.Slash)) 
+            while (Match(TokenType.Star, TokenType.Slash, TokenType.Percent)) 
             {
                 var op = Previous();
                 var right = ParseUnary();
@@ -137,7 +137,7 @@ namespace Runtime.Parsing
             return expr;
         }
 
-        private Expression? ParseUnary()
+        private Expression ParseUnary()
         {
             if (Match(TokenType.Not, TokenType.Minus)) 
             {
@@ -149,7 +149,7 @@ namespace Runtime.Parsing
             
         }
 
-        private Expression? ParsePrimary()
+        private Expression ParsePrimary()
         {
             if (Match(TokenType.False))
             {
@@ -181,7 +181,7 @@ namespace Runtime.Parsing
             }
             _errorCallBack(Peek(), "Expected Expression");
 
-            return null;
+            throw new ParseErrorException();
         }
         
         private Token? Consume(TokenType type, String message) 

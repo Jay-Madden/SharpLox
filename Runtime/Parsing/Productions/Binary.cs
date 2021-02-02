@@ -3,7 +3,7 @@ using Runtime.Lexing;
 
 namespace Runtime.Parsing.Productions
 {
-    public record Binary(Expression? Left, Token Token, Expression? Right): Expression
+    public record Binary(Expression Left, Token Token, Expression Right): Expression
     {
         public override T Accept<T>(ISyntaxTreeVisitor<T> visitor)
         {

@@ -44,6 +44,7 @@ namespace Runtime.Interpreting
                 (TokenType.Minus, true) => (double) left - (double) right,
                 (TokenType.Star, true) => (double) left * (double) right,
                 (TokenType.Slash, true) => (double) left / (double) right,
+                (TokenType.Percent, true) => (double) left % (double) right,
                 (_, false) => throw new RuntimeErrorException(binary.Token, "Operands must be numbers."),
                 _ => null!
             };

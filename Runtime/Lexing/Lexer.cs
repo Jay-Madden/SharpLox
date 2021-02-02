@@ -83,6 +83,8 @@ namespace Runtime.Lexing
                     return CreateToken(TokenType.Question);
                 case TokenChars.Colon:
                     return CreateToken(TokenType.Colon);
+                case TokenChars.Percent:
+                    return CreateToken(TokenType.Percent);
                 case TokenChars.Not:
                     return CreateToken(
                         LookAhead(TokenChars.Equal) ?

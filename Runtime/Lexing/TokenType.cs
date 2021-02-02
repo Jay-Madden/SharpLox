@@ -14,6 +14,7 @@ namespace Runtime.Lexing
         Semicolon,
         Slash,
         Star,
+        Percent,
         Question,
         Colon,
 

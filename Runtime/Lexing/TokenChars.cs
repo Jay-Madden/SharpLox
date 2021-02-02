@@ -14,6 +14,7 @@ namespace Runtime.Lexing
         public const char Semicolon = ';';
         public const char Slash = '/';
         public const char Star = '*';
+        public const char Percent = '%';
         public const char DoubleQuote = '"';
         public const char Question = '?';
         public const char Colon = ':';
