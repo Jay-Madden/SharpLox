@@ -38,7 +38,15 @@ namespace Runtime.Parsing
         {
             return $"(unary {unary.Right})";
         }
-        
-        
+
+        public string VisitExpressionStatement(ExpressionStatement expressionStatement)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string VisitPrintStatement(PrintStatement printStatement)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

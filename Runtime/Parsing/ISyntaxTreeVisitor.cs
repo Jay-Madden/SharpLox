@@ -10,5 +10,8 @@ namespace Runtime.Parsing
         public T VisitGrouping(Grouping grouping);
         public T VisitLiteral(Literal literal);
         public T VisitUnary(Unary unary);
+        public T VisitExpressionStatement(ExpressionStatement expressionStatement);
+        public T VisitPrintStatement(PrintStatement printStatement);
+        
     }
 }

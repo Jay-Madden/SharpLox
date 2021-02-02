@@ -2,7 +2,7 @@ using System;
 
 namespace Runtime.Parsing.Productions
 {
-    public abstract record Expression : Node
+    public abstract record Statement : Node
     {
 
     }

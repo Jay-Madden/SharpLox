@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net.Http.Headers;
@@ -12,10 +13,13 @@ namespace Runtime.Interpreting
 {
     public class Interpreter : ISyntaxTreeVisitor<object>
     {
-        public void Interpret(Expression expression)
+        
+        public void Interpret(IEnumerable<Statement> statements)
         {
-            var val = Evaluate(expression);
-            Console.WriteLine(val);
+            foreach (var stmt in statements)
+            {
+                stmt.Accept(this);
+            }
         }
         
         public object VisitBinary(Binary binary)
@@ -35,12 +39,12 @@ namespace Runtime.Interpreting
                     { 
                         (string l, string r) => l + r,
                         (double l, double r) => l + r,
-                        _ => throw new RuntimeError(binary.Token, "Operands must be two numbers or two strings.")
+                        _ => throw new RuntimeErrorException(binary.Token, "Operands must be two numbers or two strings.")
                     },
                 (TokenType.Minus, true) => (double) left - (double) right,
                 (TokenType.Star, true) => (double) left * (double) right,
                 (TokenType.Slash, true) => (double) left / (double) right,
-                (_, false) => throw new RuntimeError(binary.Token, "Operands must be numbers."),
+                (_, false) => throw new RuntimeErrorException(binary.Token, "Operands must be numbers."),
                 _ => null!
             };
         }
@@ -62,11 +66,23 @@ namespace Runtime.Interpreting
 
             return (unary.Operator.Type, CheckNumberOperand<double>(right)) switch
             {
-                (TokenType.Minus, false) => throw new RuntimeError(unary.Operator, "Operand must be a number."),
+                (TokenType.Minus, false) => throw new RuntimeErrorException(unary.Operator, "Operand must be a number."),
                 (TokenType.Minus, _) => -(double) right,
                 (TokenType.Not, _) => IsTruthy(right),
                 _ => null!
             };
+        }
+
+        public object VisitExpressionStatement(ExpressionStatement expressionStatement)
+        {
+            Evaluate(expressionStatement.Expression);
+            return null!;
+        }
+
+        public object VisitPrintStatement(PrintStatement printStatement)
+        {
+            Console.Write(Evaluate(printStatement.Expression));
+            return null!;
         }
 
         private object Evaluate(Expression expression) 

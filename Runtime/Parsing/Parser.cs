@@ -23,32 +23,60 @@ namespace Runtime.Parsing
             _errorCallBack = errCallback;
         }
 
-        public Expression? Parse()
+        public IEnumerable<Statement> Parse()
         {
-            try 
+            var stmts = new List<Statement>();
+            while (!_isAtEnd)
             {
-                return Expression();
-            } 
-            catch (ParseErrorException error) 
+                var parsed = ParseStatement();
+                if (parsed is not null)
+                {
+                    stmts.Add(parsed); 
+                }
+            }
+            return stmts;
+        }
+
+        private Statement? ParseStatement()
+        {
+            if (Match(TokenType.Print))
             {
-                return null;
+                return ParsePrintStatement();
+            }
+            else
+            {
+                return ParseExpressionStatement();
             }
         }
 
-        private Expression Expression()
+        private PrintStatement ParsePrintStatement()
         {
-            return Conditional();
+            var expression = ParseExpression();
+            Consume(TokenType.Semicolon, "Expected ';' after value");
+            return new PrintStatement(expression);
         }
 
-        private Expression Conditional()
+        private ExpressionStatement ParseExpressionStatement()
         {
-            var expr = Equality();
+            var expression = ParseExpression();
+            Consume(TokenType.Semicolon, "Expected ';' after expression");
+            return new ExpressionStatement(expression);
+        }
+
+        private Expression? ParseExpression()
+        {
+            return ParseConditional();
+        }
+
+        private Expression? ParseConditional()
+        {
+            var expr = ParseEquality();
             while(Match(TokenType.Question))
             {
-                var trueCase = Conditional();
+                var trueCase = ParseConditional();
                 if (Match(TokenType.Colon))
                 {
-                    var falseCase = Conditional();
+                    var falseCase = ParseConditional();
                     expr = new Ternary(expr, trueCase, falseCase);
                 }
                 else
@@ -59,69 +87,69 @@ namespace Runtime.Parsing
             return expr;
         }
         
-        private Expression Equality()
+        private Expression? ParseEquality()
         {
-            var expr = Comparison(); 
+            var expr = ParseComparison(); 
             while (Match(TokenType.EqualCompare, TokenType.NotEqual)) {
                 var op = Previous();
-                var right = Comparison();
+                var right = ParseComparison();
                 expr = new Binary(expr, op, right);
             }
             return expr;
         }
 
-        private Expression Comparison()
+        private Expression? ParseComparison()
         {
-            var expr = Additive(); 
+            var expr = ParseAdditive(); 
             while (Match(TokenType.Greater,
                     TokenType.GreaterEqual, 
                     TokenType.Less, 
                     TokenType.LessEqual)) 
             {
                 var op = Previous();
-                var right = Additive();
+                var right = ParseAdditive();
                 expr = new Binary(expr, op, right);
             }
             return expr;
         }
 
-        private Expression Additive()
+        private Expression? ParseAdditive()
         {
-            var expr = Multiplicative(); 
+            var expr = ParseMultiplicative(); 
             while (Match(TokenType.Minus, TokenType.Plus))
             {
                 var op = Previous();
-                var right = Multiplicative();
+                var right = ParseMultiplicative();
                 expr = new Binary(expr, op, right);
             }
             return expr;
         }
 
-        private Expression Multiplicative()
+        private Expression? ParseMultiplicative()
         {
-            var expr = Unary(); 
+            var expr = ParseUnary(); 
             while (Match(TokenType.Star, TokenType.Slash)) 
             {
                 var op = Previous();
-                var right = Unary();
+                var right = ParseUnary();
                 expr = new Binary(expr, op, right);
             }
             return expr;
         }
 
-        private Expression Unary()
+        private Expression? ParseUnary()
         {
             if (Match(TokenType.Not, TokenType.Minus)) 
             {
                 var op = Previous();
-                var right = Unary();
+                var right = ParseUnary();
                 return new Unary(op, right);
             }
-            return Primary();
+            return ParsePrimary();
             
         }
 
-        private Expression Primary()
+        private Expression? ParsePrimary()
         {
             if (Match(TokenType.False))
             {
@@ -147,24 +175,24 @@ namespace Runtime.Parsing
 
             if (Match(TokenType.LeftParen))
             {
-                Expression expr = Expression();
+                var expr = ParseExpression();
                 Consume(TokenType.RightParen, "Expect ')' after expression.");
                 return new Grouping(expr);
             }
             _errorCallBack(Peek(), "Expected Expression");
 
-
-            throw new ParseErrorException();
+            return null;
         }
         
-        private Token Consume(TokenType type, String message) {
+        private Token? Consume(TokenType type, String message) 
+        {
             if (Check(type))
             {
                 return Advance();
             }
 
             _errorCallBack(Peek(), message);
-            throw new ParseErrorException();
+            return null;
         }
 
         private void Synchronize()

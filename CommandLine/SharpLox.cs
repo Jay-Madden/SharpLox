@@ -10,7 +10,9 @@ namespace SharpLox
     {
         private const string PromptStr = "|>> ";
         
-        private static bool ErrorState = false;
+        private static bool ErrorState { get; set; }
+
+        private static bool RuntimeErrorState { get; set; }
         
         public static void InitializeInterpreter(string[] args)
         {
@@ -32,6 +34,12 @@ namespace SharpLox
             {
                 Environment.Exit(65);
             }
+
+            if (RuntimeErrorState)
+            {
+                Environment.Exit(70);
+            }
+
         }
 
         private static void RunPrompt()
@@ -59,7 +67,7 @@ namespace SharpLox
             var tokens = lexer.LexTokens();
 
             var parser = new Parser(tokens, ParseError);
-            var expression = parser.Parse();
+            var ast = parser.Parse();
 
             if (ErrorState)
             {
@@ -68,16 +76,15 @@ namespace SharpLox
 
             try
             {
-                new Interpreter().Interpret(expression!);
+                new Interpreter().Interpret(ast);
             }
-            catch (RuntimeError e)
+            catch (RuntimeErrorException e)
             {
-                Console.WriteLine(e);
+                RuntimeError(e);
             }
-
         }
 
-        public static void LexError(int line, string error)
+        private static void LexError(int line, string error)
         {
             Report(line, "", error);
         }
@@ -89,6 +96,12 @@ namespace SharpLox
                     " at end" :
                     $" at '{token.Lexeme}'",
                 message);
+        }
+
+        private static void RuntimeError(RuntimeErrorException e)
+        {
+            Console.WriteLine($"{e.Message}{Environment.NewLine}Line: {e.Token.Line}");
+            RuntimeErrorState = true;
         }
 
         public static void Report(int line, string where, string message)
