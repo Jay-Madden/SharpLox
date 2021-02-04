@@ -33,7 +33,7 @@ namespace Runtime.Parsing
 
         public string VisitLiteral(Literal literal)
         {
-            return literal.Value.ToString() ?? string.Empty;
+            return literal.Value?.ToString() ?? string.Empty;
         }
 
         public string VisitUnary(Unary unary)

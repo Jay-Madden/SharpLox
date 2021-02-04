@@ -124,6 +124,51 @@ namespace Runtime.Interpreting
             return null!;
         }
 
+        public object VisitIfStatement(IfStatement ifStatement)
+        {
+            if (IsTruthy(Evaluate(ifStatement.Condition)))
+            {
+                Evaluate(ifStatement.IfCase);
+            }
+            else if(ifStatement.ElseCase is not null)
+            {
+                Evaluate(ifStatement.ElseCase);
+            }
+            return null!;
+        }
+
+        public object VisitLogical(Logical logical)
+        {
+            var lhs = Evaluate(logical.Left);
+
+            if (logical.Op.Type == TokenType.Or)
+            {
+                if (IsTruthy(lhs))
+                {
+                    return lhs;
+                }
+            }
+            else
+            {
+                if (!IsTruthy(lhs))
+                {
+                    return lhs;
+                }
+            }
+
+            return Evaluate(logical.Right);
+        }
+
+        public object VisitWhile(WhileStatement whileStatement)
+        {
+            while (IsTruthy(Evaluate(whileStatement.Condition)))
+            {
+                Evaluate(whileStatement.Body);
+            }
+
+            return null!;
+        }
+
         private void ExecuteBlock(List<Node> statements, LoxEnvironment environment)
         {
             var prev = _loxEnvironment;
@@ -145,10 +190,11 @@ namespace Runtime.Interpreting
         private object Evaluate<T>(T value) where T: Node
             => value.Accept(this);
 
-        private bool IsTruthy(object obj)
-            => obj is not bool b || b;
+        private bool IsTruthy(object? obj)
+            => obj != null &&(obj is not bool b || b);
+        
 
-        private bool IsEqual(object? a, object? b) 
+       private bool IsEqual(object? a, object? b) 
             => a?.Equals(b) ?? b == null;
         
         private bool CheckNumberOperand<T>(params object[] operands) 

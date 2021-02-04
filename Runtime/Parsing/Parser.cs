@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using Runtime.Lexing;
 using Runtime.Parsing.Productions;
 
@@ -82,7 +81,37 @@ namespace Runtime.Parsing
             {
                 return new Block(ParseBlock());
             }
+
+            if (Match(TokenType.While))
+            {
+                return ParseWhileStatement();
+            }
+
+            if (Match(TokenType.If))
+            {
+                return ParseIfStatement();
+            }
             return ParseExpressionStatement();
+        }
+
+        private WhileStatement ParseWhileStatement()
+        {
+            var condition = ParseExpression();
+            var body = ParseStatement();
+
+            return new WhileStatement(condition, body);
+
+        }
+        private IfStatement ParseIfStatement()
+        {
+            var condition = ParseExpression();
+            var ifBlock = ParseStatement();
+
+            var elseBlock = Match(TokenType.Else) 
+                ? ParseStatement() 
+                : null;
+
+            return new IfStatement(condition, ifBlock, elseBlock);
         }
 
         private List<Node> ParseBlock()
@@ -115,13 +144,13 @@ namespace Runtime.Parsing
         {
             var expression = ParseExpression();
 
-            if (!_isRepl)
+            if (_isRepl && !Check(TokenType.Semicolon))
             {
-                Consume(TokenType.Semicolon, "Expected ';' after expression");
-                return new ExpressionStatement(expression);
+                return expression;
             }
 
-            return expression;
+            Consume(TokenType.Semicolon, "Expected ';' after expression");
+            return new ExpressionStatement(expression);
         }
 
         private Expression ParseExpression()
@@ -152,7 +181,7 @@ namespace Runtime.Parsing
 
         private Expression ParseConditional()
         {
-            var expr = ParseEquality();
+            var expr = ParseLogicalOr();
             while(Match(TokenType.Question))
             {
                 var trueCase = ParseConditional();
@@ -167,6 +196,34 @@ namespace Runtime.Parsing
                 }
             }
             return expr;
+        }
+
+        private Expression ParseLogicalOr()
+        {
+            var lhs = ParseLogicalAnd();
+
+            while (Match(TokenType.Or))
+            {
+                var op = Previous();
+                var rhs = ParseLogicalAnd();
+                return new Logical(lhs, op, rhs);
+            }
+
+            return lhs;
+        }
+        
+        private Expression ParseLogicalAnd()
+        {
+            var lhs = ParseEquality();
+
+            while (Match(TokenType.And))
+            {
+                var op = Previous();
+                var rhs = ParseEquality();
+                return new Logical(lhs, op, rhs);
+            }
+
+            return lhs;
         }
         
         private Expression ParseEquality()
