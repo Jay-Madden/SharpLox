@@ -19,6 +19,10 @@ namespace Runtime.Interpreting
         {
             if (_values.TryGetValue(name.Lexeme, out var val))
             {
+                if (val is null)
+                {
+                    throw new RuntimeErrorException(name, $"Variable {name.Lexeme} has not been initialized");
+                }
                 return val;
             }
 
@@ -27,7 +31,7 @@ namespace Runtime.Interpreting
                 return Parent.Get(name);
             }
 
-            throw new RuntimeErrorException(name, $"Variable: {name.Lexeme} does not exist");
+            throw new RuntimeErrorException(name, $"Variable {name.Lexeme} does not exist");
         }
 
         public void Assign(Token name, object value)

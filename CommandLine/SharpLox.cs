@@ -31,7 +31,7 @@ namespace SharpLox
         private static void RunFile(string path)
         {
             var prog = File.ReadAllText(Path.GetFullPath(path));
-            Run(prog);
+            Run(prog, false);
             if (ErrorState)
             {
                 Environment.Exit(65);
@@ -58,17 +58,17 @@ namespace SharpLox
                     break;
                 }
 
-                Run(line);
+                Run(line, true);
                 ErrorState = false;
             }
         }
         
-        private static void Run(string source)
+        private static void Run(string source, bool isRepl)
         {
             var lexer = new Lexer(source, LexError);
             var tokens = lexer.LexTokens();
 
-            var parser = new Parser(tokens, ParseError);
+            var parser = new Parser(tokens, ParseError, isRepl);
             try
             {
                 var ast = parser.Parse();
@@ -79,8 +79,7 @@ namespace SharpLox
                 _interpreter.Interpret(ast);
             }
             catch (ParseErrorException)
-            {
-            }
+            { }
             catch (RuntimeErrorException e)
             {
                 RuntimeError(e);
@@ -95,9 +94,9 @@ namespace SharpLox
         private static void ParseError(Token token, string message) 
         {
             Report(token.Line, 
-                token.Type == TokenType.Eof ?
-                    " at end" :
-                    $" at '{token.Lexeme}'",
+                token.Type == TokenType.Eof 
+                    ? " at end" 
+                    : $" at '{token.Lexeme}'", 
                 message);
         }
 

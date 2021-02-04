@@ -15,11 +15,17 @@ namespace Runtime.Interpreting
     {
 
         private LoxEnvironment _loxEnvironment = new();
-        
-        public void Interpret(IEnumerable<Statement> statements)
+
+        public void Interpret(IEnumerable<Node> statements)
         {
             foreach (var stmt in statements)
             {
+                if (stmt is Expression expr)
+                {
+                    Console.WriteLine(Evaluate(expr));
+                    return;
+                }
+                
                 Evaluate(stmt);
             }
         }
@@ -118,7 +124,7 @@ namespace Runtime.Interpreting
             return null!;
         }
 
-        private void ExecuteBlock(List<Statement> statements, LoxEnvironment environment)
+        private void ExecuteBlock(List<Node> statements, LoxEnvironment environment)
         {
             var prev = _loxEnvironment;
 

@@ -15,17 +15,20 @@ namespace Runtime.Parsing
 
         private bool _isAtEnd => Peek().Type == TokenType.Eof;
 
+        private readonly bool _isRepl;
+
         private readonly Action<Token, string> _errorCallBack;
 
-        public Parser(IEnumerable<Token> tokens, Action<Token, string> errCallback)
+        public Parser(IEnumerable<Token> tokens, Action<Token, string> errCallback, bool isRepl)
         {
+            _isRepl = isRepl;
             _tokens = tokens.ToList();
             _errorCallBack = errCallback;
         }
 
-        public IEnumerable<Statement> Parse()
+        public IEnumerable<Node> Parse()
         {
-            var stmts = new List<Statement>();
+            var stmts = new List<Node>();
             while (!_isAtEnd)
             {
                 var parsed = ParseDeclaration();
@@ -37,7 +40,7 @@ namespace Runtime.Parsing
             return stmts;
         }
 
-        private Statement? ParseDeclaration()
+        private Node? ParseDeclaration()
         {
             try
             {
@@ -52,7 +55,7 @@ namespace Runtime.Parsing
             }
         }
 
-        private Statement? ParseVariableDeclaration()
+        private Node? ParseVariableDeclaration()
         {
             var identifier = Consume(TokenType.Identifier, "Identifier expected");
 
@@ -66,10 +69,9 @@ namespace Runtime.Parsing
             Consume(TokenType.Semicolon, "Expected Semicolon after declaration");
             
             return new VariableStatement(identifier, expression);
-
         }
 
-        private Statement ParseStatement()
+        private Node ParseStatement()
         {
             if (Match(TokenType.Print))
             {
@@ -83,9 +85,9 @@ namespace Runtime.Parsing
             return ParseExpressionStatement();
         }
 
-        private List<Statement> ParseBlock()
+        private List<Node> ParseBlock()
         {
-            var stmts = new List<Statement>();
+            var stmts = new List<Node>();
 
             while (!Check(TokenType.RightBrace) && !_isAtEnd)
             {
@@ -109,11 +111,17 @@ namespace Runtime.Parsing
             return new PrintStatement(expression);
         }
         
-        private ExpressionStatement ParseExpressionStatement()
+        private Node ParseExpressionStatement()
         {
             var expression = ParseExpression();
-            Consume(TokenType.Semicolon, "Expected ';' after expression");
-            return new ExpressionStatement(expression);
+
+            if (!_isRepl)
+            {
+                Consume(TokenType.Semicolon, "Expected ';' after expression");
+                return new ExpressionStatement(expression);
+            }
+
+            return expression;
         }
 
         private Expression ParseExpression()
