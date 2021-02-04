@@ -28,16 +28,48 @@ namespace Runtime.Parsing
             var stmts = new List<Statement>();
             while (!_isAtEnd)
             {
-                var parsed = ParseStatement();
+                var parsed = ParseDeclaration();
                 if (parsed is not null)
                 {
-                    stmts.Add(parsed); 
+                    stmts.Add(parsed);
                 }
             }
             return stmts;
         }
 
-        private Statement? ParseStatement()
+        private Statement? ParseDeclaration()
+        {
+            try
+            {
+                return Match(TokenType.Var)
+                    ? ParseVariableDeclaration()
+                    : ParseStatement();
+            }
+            catch (ParseErrorException)
+            {
+                Synchronize();
+                return null;
+            }
+        }
+
+        private Statement? ParseVariableDeclaration()
+        {
+            var identifier = Consume(TokenType.Identifier, "Identifier expected");
+
+            if (identifier is null)
+            {
+                return null;
+            }
+
+            var expression = Match(TokenType.EqualAssign) ? ParseExpression() : null!;
+
+            Consume(TokenType.Semicolon, "Expected Semicolon after declaration");
+            
+            return new VariableStatement(identifier, expression);
+
+        }
+
+        private Statement ParseStatement()
         {
             if (Match(TokenType.Print))
             {
@@ -48,14 +80,14 @@ namespace Runtime.Parsing
                 return ParseExpressionStatement();
             }
         }
-
+        
         private PrintStatement ParsePrintStatement()
         {
             var expression = ParseExpression();
             Consume(TokenType.Semicolon, "Expected ';' after value");
             return new PrintStatement(expression);
         }
-
+        
         private ExpressionStatement ParseExpressionStatement()
         {
             var expression = ParseExpression();
@@ -65,7 +97,28 @@ namespace Runtime.Parsing
 
         private Expression ParseExpression()
         {
-            return ParseConditional();
+            return ParseVariableAssignment();
+        }
+
+        private Expression ParseVariableAssignment()
+        {
+            var expression = ParseConditional();
+
+            if (Match(TokenType.EqualAssign))
+            {
+                var equals = Previous();
+                var value = ParseVariableAssignment();
+
+                if (expression is VariableAccess access)
+                {
+                    var name = access.Name;
+                    return new VariableAssign(name, value);
+                }
+
+                _errorCallBack(equals, "Invalid Assignment Target");
+            }
+
+            return expression;
         }
 
         private Expression ParseConditional()
@@ -145,8 +198,17 @@ namespace Runtime.Parsing
                 var right = ParseUnary();
                 return new Unary(op, right);
             }
+            return ParseVariableAccess();
+        }
+
+        private Expression ParseVariableAccess()
+        {
+            if (Match(TokenType.Identifier))
+            {
+                return new VariableAccess(Previous());
+            }
+
             return ParsePrimary();
-            
         }
 
         private Expression ParsePrimary()
@@ -179,6 +241,7 @@ namespace Runtime.Parsing
                 Consume(TokenType.RightParen, "Expect ')' after expression.");
                 return new Grouping(expr);
             }
+            
             _errorCallBack(Peek(), "Expected Expression");
 
             throw new ParseErrorException();

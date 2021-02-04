@@ -13,6 +13,8 @@ namespace SharpLox
         private static bool ErrorState { get; set; }
 
         private static bool RuntimeErrorState { get; set; }
+
+        private static readonly Interpreter _interpreter = new();
         
         public static void InitializeInterpreter(string[] args)
         {
@@ -57,7 +59,6 @@ namespace SharpLox
                 }
 
                 Run(line);
-                Console.WriteLine();
                 ErrorState = false;
             }
         }
@@ -75,7 +76,7 @@ namespace SharpLox
                 {
                     return;
                 }
-                new Interpreter().Interpret(ast);
+                _interpreter.Interpret(ast);
             }
             catch (ParseErrorException)
             {

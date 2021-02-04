@@ -48,5 +48,20 @@ namespace Runtime.Parsing
         {
             throw new NotImplementedException();
         }
+
+        public string VisitVariableStatement(VariableStatement variableStatement)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string VisitVariableAccess(VariableAccess variableAccess)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string VisitVariableAssign(VariableAssign variableAssign)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -13,6 +13,8 @@ namespace Runtime.Interpreting
 {
     public class Interpreter : ISyntaxTreeVisitor<object>
     {
+
+        private readonly LoxEnvironment _loxEnvironment = new();
         
         public void Interpret(IEnumerable<Statement> statements)
         {
@@ -82,8 +84,32 @@ namespace Runtime.Interpreting
 
         public object VisitPrintStatement(PrintStatement printStatement)
         {
-            Console.Write(Evaluate(printStatement.Expression));
+            Console.WriteLine(Evaluate(printStatement.Expression));
             return null!;
+        }
+
+        public object VisitVariableStatement(VariableStatement variableStatement)
+        {
+            object? value = null;
+            if (variableStatement.Expression is not null)
+            {
+                value = Evaluate(variableStatement.Expression);
+            }
+            
+            _loxEnvironment.Define(variableStatement.Identifier.Lexeme, value);
+            return null!;
+        }
+
+        public object VisitVariableAccess(VariableAccess variableAccess)
+        {
+            return _loxEnvironment.Get(variableAccess.Name)!;
+        }
+
+        public object VisitVariableAssign(VariableAssign variableAssign)
+        {
+            var value = Evaluate(variableAssign.Expression);
+            _loxEnvironment.Assign(variableAssign.Identifier, value);
+            return value;
         }
 
         private object Evaluate(Expression expression) 
