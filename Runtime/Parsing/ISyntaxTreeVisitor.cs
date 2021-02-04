@@ -15,5 +15,6 @@ namespace Runtime.Parsing
         public T VisitVariableStatement(VariableStatement variableStatement);
         public T VisitVariableAccess(VariableAccess variableAccess);
         public T VisitVariableAssign(VariableAssign variableAssign);
+        public T VisitBlock(Block block);
     }
 }

@@ -3,16 +3,18 @@ using Runtime.Parsing.Productions;
 
 namespace Runtime.Parsing
 {
-    public class PrettyPrinter: ISyntaxTreeVisitor<string>
+    public class PrettyPrinter//: ISyntaxTreeVisitor<string>
     {
         private string _output = string.Empty;
         
+        /*
         public string Print<T>(T node) where T: Expression
         {
             _output = string.Empty;
             
             return node.Accept(this);
         }
+        */
         
         public string VisitBinary(Binary binary)
         {

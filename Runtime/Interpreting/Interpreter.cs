@@ -14,13 +14,13 @@ namespace Runtime.Interpreting
     public class Interpreter : ISyntaxTreeVisitor<object>
     {
 
-        private readonly LoxEnvironment _loxEnvironment = new();
+        private LoxEnvironment _loxEnvironment = new();
         
         public void Interpret(IEnumerable<Statement> statements)
         {
             foreach (var stmt in statements)
             {
-                stmt.Accept(this);
+                Evaluate(stmt);
             }
         }
         
@@ -112,8 +112,32 @@ namespace Runtime.Interpreting
             return value;
         }
 
-        private object Evaluate(Expression expression) 
-            => expression.Accept(this);
+        public object VisitBlock(Block block)
+        {
+            ExecuteBlock(block.Statements, new LoxEnvironment{Parent = _loxEnvironment});
+            return null!;
+        }
+
+        private void ExecuteBlock(List<Statement> statements, LoxEnvironment environment)
+        {
+            var prev = _loxEnvironment;
+
+            try
+            {
+                _loxEnvironment = environment;
+                foreach (var stmt in statements)
+                {
+                    Evaluate(stmt);
+                }
+            }
+            finally
+            {
+                _loxEnvironment = prev;
+            }
+        }
+
+        private object Evaluate<T>(T value) where T: Node
+            => value.Accept(this);
 
         private bool IsTruthy(object obj)
             => obj is not bool b || b;

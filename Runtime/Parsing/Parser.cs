@@ -75,10 +75,31 @@ namespace Runtime.Parsing
             {
                 return ParsePrintStatement();
             }
-            else
+
+            if (Match(TokenType.LeftBrace))
             {
-                return ParseExpressionStatement();
+                return new Block(ParseBlock());
             }
+            return ParseExpressionStatement();
+        }
+
+        private List<Statement> ParseBlock()
+        {
+            var stmts = new List<Statement>();
+
+            while (!Check(TokenType.RightBrace) && !_isAtEnd)
+            {
+                var decl = ParseDeclaration();
+                if (decl is null)
+                {
+                    continue;
+                }
+                
+                stmts.Add(decl);
+            }
+
+            Consume(TokenType.RightBrace, "Expected Closing brace");
+            return stmts;
         }
         
         private PrintStatement ParsePrintStatement()
