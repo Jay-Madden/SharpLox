@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Runtime.Parsing.Productions
 {
-    public record Block(List<Node> Statements): Statement
+    public record Block(IEnumerable<Node> Statements): Statement
     {
         public override T Accept<T>(ISyntaxTreeVisitor<T> visitor)
         {

@@ -43,9 +43,14 @@ namespace Runtime.Parsing
         {
             try
             {
-                return Match(TokenType.Var)
-                    ? ParseVariableDeclaration()
-                    : ParseStatement();
+                if (Match(TokenType.Var))
+                {
+                    return ParseVariableDeclaration();
+                }
+                else
+                {
+                    return ParseStatement();
+                }
             }
             catch (ParseErrorException)
             {
@@ -77,9 +82,14 @@ namespace Runtime.Parsing
                 return ParsePrintStatement();
             }
 
+            if (Match(TokenType.For))
+            {
+                return ParseForStatement();
+            }
+
             if (Match(TokenType.LeftBrace))
             {
-                return new Block(ParseBlock());
+                return ParseBlock();
             }
 
             if (Match(TokenType.While))
@@ -94,27 +104,99 @@ namespace Runtime.Parsing
             return ParseExpressionStatement();
         }
 
-        private WhileStatement ParseWhileStatement()
+        private Node ParseForStatement()
+        {
+            Node? initializer;
+            if (Match(TokenType.Semicolon))
+            {
+                initializer = null;
+            }
+            else if (Match(TokenType.Var))
+            {
+                initializer = ParseVariableDeclaration();
+            }
+            else
+            {
+                initializer = ParseExpressionStatement();
+            }
+
+            Expression? condition = null;
+            if (!Check(TokenType.Semicolon))
+            {
+                condition = ParseExpression();
+            }
+            Consume(TokenType.Semicolon, "Expect ';' after loop condition.");
+            
+            Expression? increment = null;
+            if (!Check(TokenType.RightParen)) {
+                increment = ParseExpression();
+            }
+            
+            var body = ParseStatement();
+
+            if (increment is not null)
+            {
+                body = new Block(new[]
+                {
+                    body,
+                    new ExpressionStatement(increment)
+                });
+            }
+
+            condition ??= new Literal(true);
+            body = new WhileStatement(condition, body);
+
+            if (initializer is not null)
+            {
+                body = new Block(new[] {initializer, body});
+            }
+
+            return body;
+        }
+
+        private Statement ParseWhileStatement()
         {
             var condition = ParseExpression();
+            
+            if (!Check(TokenType.LeftBrace))
+            {
+                _errorCallBack(Peek(), "while loop bodies must be a block");
+            }
+            
             var body = ParseStatement();
 
             return new WhileStatement(condition, body);
 
         }
-        private IfStatement ParseIfStatement()
+        private Statement ParseIfStatement()
         {
             var condition = ParseExpression();
-            var ifBlock = ParseStatement();
 
-            var elseBlock = Match(TokenType.Else) 
-                ? ParseStatement() 
-                : null;
+            if (!Check(TokenType.LeftBrace))
+            {
+                _errorCallBack(Peek(), "if statement bodies must be a block");
+            }
+            
+            var body = ParseStatement();
 
-            return new IfStatement(condition, ifBlock, elseBlock);
+            Node? elseBlock;
+            if (Match(TokenType.Else))
+            {
+                if (!Check(TokenType.LeftBrace))
+                {
+                    _errorCallBack(Peek(), "else statement bodies must be a block");
+                }
+                elseBlock = ParseStatement();
+            }
+            else
+            {
+                elseBlock = null;
+            }
+
+            return new IfStatement(condition, body, elseBlock);
         }
 
-        private List<Node> ParseBlock()
+        private Block ParseBlock()
         {
             var stmts = new List<Node>();
 
@@ -130,7 +212,7 @@ namespace Runtime.Parsing
             }
 
             Consume(TokenType.RightBrace, "Expected Closing brace");
-            return stmts;
+            return new Block(stmts);
         }
         
         private PrintStatement ParsePrintStatement()

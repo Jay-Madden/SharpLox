@@ -169,7 +169,7 @@ namespace Runtime.Interpreting
             return null!;
         }
 
-        private void ExecuteBlock(List<Node> statements, LoxEnvironment environment)
+        private void ExecuteBlock(IEnumerable<Node> statements, LoxEnvironment environment)
         {
             var prev = _loxEnvironment;
 
@@ -191,9 +191,8 @@ namespace Runtime.Interpreting
             => value.Accept(this);
 
         private bool IsTruthy(object? obj)
-            => obj != null &&(obj is not bool b || b);
+            => obj is not null and (not bool or true);
         
-
        private bool IsEqual(object? a, object? b) 
             => a?.Equals(b) ?? b == null;
         
