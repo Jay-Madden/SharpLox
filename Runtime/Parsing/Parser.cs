@@ -16,6 +16,10 @@ namespace Runtime.Parsing
 
         private readonly bool _isRepl;
 
+        private int _loopDepth;
+
+        private bool _isLoop => _loopDepth > 0;
+
         private readonly Action<Token, string> _errorCallBack;
 
         public Parser(IEnumerable<Token> tokens, Action<Token, string> errCallback, bool isRepl)
@@ -87,6 +91,17 @@ namespace Runtime.Parsing
                 return ParseForStatement();
             }
 
+            if (Match(TokenType.Break))
+            {
+                if (!_isLoop)
+                {
+                    _errorCallBack(Previous(), "A break statement is not allowed outside of a loop");
+                }
+                
+                Consume(TokenType.Semicolon, "Expect ';' after break");
+                return new BreakStatement();
+            }
+
             if (Match(TokenType.LeftBrace))
             {
                 return ParseBlock();
@@ -106,6 +121,7 @@ namespace Runtime.Parsing
 
         private Node ParseForStatement()
         {
+            _loopDepth += 1;
             Node? initializer;
             if (Match(TokenType.Semicolon))
             {
@@ -151,11 +167,14 @@ namespace Runtime.Parsing
                 body = new Block(new[] {initializer, body});
             }
 
+            _loopDepth -= 1;
             return body;
         }
 
         private Statement ParseWhileStatement()
         {
+            _loopDepth += 1;
+            
             var condition = ParseExpression();
             
             if (!Check(TokenType.LeftBrace))
@@ -165,6 +184,7 @@ namespace Runtime.Parsing
             
             var body = ParseStatement();
 
+            _loopDepth -= 1;
             return new WhileStatement(condition, body);
 
         }

@@ -95,8 +95,8 @@ namespace SharpLox
         {
             Report(token.Line, 
                 token.Type == TokenType.Eof 
-                    ? " at end" 
-                    : $" at '{token.Lexeme}'", 
+                    ? "at end" 
+                    : $"at '{token.Lexeme}'", 
                 message);
         }
 
@@ -106,9 +106,9 @@ namespace SharpLox
             RuntimeErrorState = true;
         }
 
-        public static void Report(int line, string where, string message)
+        private static void Report(int line, string where, string message)
         {
-            Console.WriteLine($"Line: {line} Error: {where}: {message}");
+            Console.WriteLine($"Line {line}: Error {where}: {message}");
             ErrorState = true;
         }
     }

@@ -45,6 +45,7 @@ namespace Runtime.Lexing
         True,
         Var,
         While,
+        Break,
 
         // Literals.
         Identifier,

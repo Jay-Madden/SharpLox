@@ -15,6 +15,8 @@ namespace Runtime.Interpreting
     {
 
         private LoxEnvironment _loxEnvironment = new();
+        
+        private bool _isBreak = false;
 
         public void Interpret(IEnumerable<Node> statements)
         {
@@ -164,8 +166,19 @@ namespace Runtime.Interpreting
             while (IsTruthy(Evaluate(whileStatement.Condition)))
             {
                 Evaluate(whileStatement.Body);
+                if (_isBreak)
+                {
+                    _isBreak = false;
+                    break;
+                }
             }
 
+            return null!;
+        }
+
+        public object VisitBreakStatement(BreakStatement breakStatement)
+        {
+            _isBreak = true;
             return null!;
         }
 
@@ -179,6 +192,10 @@ namespace Runtime.Interpreting
                 foreach (var stmt in statements)
                 {
                     Evaluate(stmt);
+                    if (_isBreak)
+                    {
+                        return;
+                    }
                 }
             }
             finally

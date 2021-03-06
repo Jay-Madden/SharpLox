@@ -23,6 +23,7 @@ namespace Runtime.Lexing
             {"true", TokenType.True},
             {"var", TokenType.Var},
             {"while", TokenType.While},
+            {"break", TokenType.Break},
         };
     }
 }

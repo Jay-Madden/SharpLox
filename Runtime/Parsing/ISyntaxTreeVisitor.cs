@@ -19,5 +19,6 @@ namespace Runtime.Parsing
         public T VisitIfStatement(IfStatement ifStatement);
         public T VisitLogical(Logical logical);
         public T VisitWhile(WhileStatement whileStatement);
+        public T VisitBreakStatement(BreakStatement breakStatement);
     }
 }

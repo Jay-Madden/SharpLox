@@ -11,4 +11,11 @@
     <ProjectReference Include="..\Runtime\Runtime.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="input.lox">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>  
+  </ItemGroup>
+
 </Project>
