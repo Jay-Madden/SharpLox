@@ -38,7 +38,6 @@ namespace Runtime.Lexing
         If,
         Nil,
         Or,
-        Print,
         Return,
         Super,
         This,

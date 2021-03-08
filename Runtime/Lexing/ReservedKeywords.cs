@@ -17,7 +17,6 @@ namespace Runtime.Lexing
             {"nil", TokenType.Nil},
             {"for", TokenType.For},
             {"this", TokenType.This},
-            {"print", TokenType.Print},
             {"return", TokenType.Return},
             {"super", TokenType.Super},
             {"true", TokenType.True},

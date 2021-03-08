@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net.Http.Headers;
 using System.Runtime.InteropServices.ComTypes;
+using Runtime.Interpreting.Globals;
 using Runtime.Lexing;
 using Runtime.Parsing;
 using Runtime.Parsing.Productions;
@@ -14,9 +16,20 @@ namespace Runtime.Interpreting
     public class Interpreter : ISyntaxTreeVisitor<object>
     {
 
-        private LoxEnvironment _loxEnvironment = new();
+        public LoxEnvironment LoxGlobals { get; } = new();
+
+        private LoxEnvironment _loxEnvironment;
+
+        public Interpreter()
+        {
+            _loxEnvironment = LoxGlobals;
+            
+            LoxGlobals.Define(NativeFunctions.Clock, new Clock());
+            LoxGlobals.Define(NativeFunctions.Input, new Input());
+            LoxGlobals.Define(NativeFunctions.Print, new Print());
+        }
         
-        private bool _isBreak = false;
+        private bool _isBreak;
 
         public void Interpret(IEnumerable<Node> statements)
         {
@@ -29,6 +42,28 @@ namespace Runtime.Interpreting
                 }
                 
                 Evaluate(stmt);
+            }
+        }
+        
+        public void ExecuteBlock(IEnumerable<Node> statements, LoxEnvironment environment)
+        {
+            var prev = _loxEnvironment;
+
+            try
+            {
+                _loxEnvironment = environment;
+                foreach (var stmt in statements)
+                {
+                    Evaluate(stmt);
+                    if (_isBreak)
+                    {
+                        return;
+                    }
+                }
+            }
+            finally
+            {
+                _loxEnvironment = prev;
             }
         }
         
@@ -182,26 +217,32 @@ namespace Runtime.Interpreting
             return null!;
         }
 
-        private void ExecuteBlock(IEnumerable<Node> statements, LoxEnvironment environment)
+        public object VisitCall(Call call)
         {
-            var prev = _loxEnvironment;
+            var callee = Evaluate(call.callee);
+            var args = call.args.Select(Evaluate);
 
-            try
+            if (callee is not ICallable func)
             {
-                _loxEnvironment = environment;
-                foreach (var stmt in statements)
-                {
-                    Evaluate(stmt);
-                    if (_isBreak)
-                    {
-                        return;
-                    }
-                }
+                throw new RuntimeErrorException(call.paren, "Only functions and classes are callable");
             }
-            finally
-            {
-                _loxEnvironment = prev;
-            }
+            
+            return func.Call(this, args);
+        }
+
+        public object VisitFuncDeclaration(FuncDeclaration funcDeclaration)
+        {
+            var func = new SharpLoxFunction(funcDeclaration);
+            _loxEnvironment.Define(funcDeclaration.name.Lexeme, func);
+            return null!;
+        }
+
+        public object VisitReturnStatement(ReturnStatement returnStatement)
+        {
+            throw new ReturnValue(
+                returnStatement.Value is not null 
+                    ? Evaluate(returnStatement.Value)
+                    : null!);
         }
 
         private object Evaluate<T>(T value) where T: Node

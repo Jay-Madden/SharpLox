@@ -47,20 +47,49 @@ namespace Runtime.Parsing
         {
             try
             {
-                if (Match(TokenType.Var))
+                if (Match(TokenType.Func))
+                {
+                    return ParseFuncDeclaration();
+                }
+                else if (Match(TokenType.Var))
                 {
                     return ParseVariableDeclaration();
                 }
-                else
-                {
-                    return ParseStatement();
-                }
+                
+                return ParseStatement();
             }
             catch (ParseErrorException)
             {
                 Synchronize();
                 return null;
             }
+        }
+
+        private Node ParseFuncDeclaration()
+        {
+            var name = Consume(TokenType.Identifier, "Expected function name");
+
+            var parameters = new List<Token>();
+
+            Consume(TokenType.LeftParen, "Expected '(' after function name");
+
+            while (!Check(TokenType.RightParen))
+            {
+                do
+                {
+                    var identifier = Consume(TokenType.Identifier, "Expected argument identifier");
+                    if (identifier is not null)
+                    {
+                        parameters.Add(identifier);
+                    }
+                } while (Match(TokenType.Comma));
+            }
+            Consume(TokenType.RightParen, "Expected ')' after function argument list");
+            
+            Consume(TokenType.LeftBrace, "Expected '{' after function declaration");
+
+            var body = ParseBlock();
+            return new FuncDeclaration(name!, parameters, body);
         }
 
         private Node? ParseVariableDeclaration()
@@ -81,14 +110,14 @@ namespace Runtime.Parsing
 
         private Node ParseStatement()
         {
-            if (Match(TokenType.Print))
-            {
-                return ParsePrintStatement();
-            }
-
             if (Match(TokenType.For))
             {
                 return ParseForStatement();
+            }
+            
+            if (Match(TokenType.Return))
+            {
+                return ParseReturnStatement();
             }
 
             if (Match(TokenType.Break))
@@ -117,6 +146,19 @@ namespace Runtime.Parsing
                 return ParseIfStatement();
             }
             return ParseExpressionStatement();
+        }
+
+        private Node ParseReturnStatement()
+        {
+            var token = Previous();
+
+            var expression = !Check(TokenType.Semicolon) 
+                ? ParseExpression() 
+                : null;
+
+            Consume(TokenType.Semicolon, "Expected ';' after return statement");
+
+            return new ReturnStatement(token, expression);
         }
 
         private Node ParseForStatement()
@@ -233,13 +275,6 @@ namespace Runtime.Parsing
 
             Consume(TokenType.RightBrace, "Expected Closing brace");
             return new Block(stmts);
-        }
-        
-        private PrintStatement ParsePrintStatement()
-        {
-            var expression = ParseExpression();
-            Consume(TokenType.Semicolon, "Expected ';' after value");
-            return new PrintStatement(expression);
         }
         
         private Node ParseExpressionStatement()
@@ -386,9 +421,43 @@ namespace Runtime.Parsing
                 var right = ParseUnary();
                 return new Unary(op, right);
             }
-            return ParseVariableAccess();
+            return ParseCall();
         }
 
+        private Expression ParseCall()
+        {
+            var expression = ParseVariableAccess();
+
+            while (true)
+            {
+                if (Match(TokenType.LeftParen))
+                {
+                    expression = ParseArguments(expression);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            return expression;
+        }
+
+        private Expression ParseArguments(Expression callee)
+        {
+            var args = new List<Expression>();
+            while (!Check(TokenType.RightParen) && !_isAtEnd)
+            {
+                do
+                {
+                    args.Add(ParseExpression());
+                } 
+                while (Match(TokenType.Comma));
+            }
+
+            var token = Consume(TokenType.RightParen, "Expected ) after function call");
+            return new Call(callee, token, args);
+        }
+        
         private Expression ParseVariableAccess()
         {
             if (Match(TokenType.Identifier))
@@ -464,7 +533,6 @@ namespace Runtime.Parsing
                     case TokenType.For:
                     case TokenType.If:
                     case TokenType.While:
-                    case TokenType.Print:
                     case TokenType.Return:
                         return;
                 }

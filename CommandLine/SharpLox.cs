@@ -102,7 +102,7 @@ namespace SharpLox
 
         private static void RuntimeError(RuntimeErrorException e)
         {
-            Console.WriteLine($"{e.Message}{Environment.NewLine}Line: {e.Token.Line}");
+            Console.WriteLine($"{e.Message}{Environment.NewLine}Line: {e.Token?.Line ?? -1}");
             RuntimeErrorState = true;
         }
 
