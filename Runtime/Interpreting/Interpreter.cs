@@ -232,7 +232,7 @@ namespace Runtime.Interpreting
 
         public object VisitFuncDeclaration(FuncDeclaration funcDeclaration)
         {
-            var func = new SharpLoxFunction(funcDeclaration);
+            var func = new SharpLoxFunction(funcDeclaration, _loxEnvironment);
             _loxEnvironment.Define(funcDeclaration.name.Lexeme, func);
             return null!;
         }
