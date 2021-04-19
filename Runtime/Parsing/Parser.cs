@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using Runtime.Lexing;
 using Runtime.Parsing.Productions;
@@ -366,7 +367,8 @@ namespace Runtime.Parsing
         private Expression ParseEquality()
         {
             var expr = ParseComparison(); 
-            while (Match(TokenType.EqualCompare, TokenType.NotEqual)) {
+            while (Match(TokenType.EqualCompare, TokenType.NotEqual))
+            {
                 var op = Previous();
                 var right = ParseComparison();
                 expr = new Binary(expr, op, right);
@@ -421,9 +423,41 @@ namespace Runtime.Parsing
                 var right = ParseUnary();
                 return new Unary(op, right);
             }
-            return ParseCall();
+            return ParseLambda();
         }
 
+        private Expression ParseLambda()
+        {
+
+            if (Match(TokenType.Func))
+            {
+                var parameters = new List<Token>();
+
+                Consume(TokenType.LeftParen, "Expected '(' after Lambda declaration");
+
+                while (!Check(TokenType.RightParen))
+                {
+                    do
+                    {
+                        var identifier = Consume(TokenType.Identifier, "Expected argument identifier");
+                        if (identifier is not null)
+                        {
+                            parameters.Add(identifier);
+                        }
+                    } 
+                    while (Match(TokenType.Comma));
+                }
+                Consume(TokenType.RightParen, "Expected ')' after Lambda argument list");
+                
+                Consume(TokenType.LeftBrace, "Expected '{' after Lambda declaration");
+
+                var body = ParseBlock();
+                return new Lambda(parameters, body);
+            }
+            
+            return ParseCall();
+        }
+        
         private Expression ParseCall()
         {
             var expression = ParseVariableAccess();
@@ -457,6 +491,7 @@ namespace Runtime.Parsing
             var token = Consume(TokenType.RightParen, "Expected ) after function call");
             return new Call(callee, token, args);
         }
+
         
         private Expression ParseVariableAccess()
         {

@@ -46,11 +46,6 @@ namespace Runtime.Parsing
             throw new NotImplementedException();
         }
 
-        public string VisitPrintStatement(PrintStatement printStatement)
-        {
-            throw new NotImplementedException();
-        }
-
         public string VisitVariableStatement(VariableStatement variableStatement)
         {
             throw new NotImplementedException();

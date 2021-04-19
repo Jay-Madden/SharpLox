@@ -7,32 +7,35 @@ using Runtime.Parsing.Productions;
 
 namespace Runtime.Interpreting
 {
-    public class SharpLoxFunction : ICallable
+    public class SharpLoxCallable : ICallable
     {
-        private FuncDeclaration _declaration;
-
+        private readonly IEnumerable<Token> _parameters;
+        
+        private readonly Block _body;
+        
         private LoxEnvironment _closure;
         
-        public int Arity => _declaration.parameters.Count();
+        public int Arity { get; }
 
-        public SharpLoxFunction(FuncDeclaration declaration, LoxEnvironment closure)
+        public SharpLoxCallable(IEnumerable<Token> parameters, Block body, LoxEnvironment closure)
         {
-            _declaration = declaration;
+            _parameters = parameters.ToList();
+            _body = body;
             _closure = closure;
+            Arity = _parameters.Count();
         }
-        
 
         public object Call(Interpreter interpreter, IEnumerable<object> arguments)
         {
             var funcEnv = new LoxEnvironment{Parent = _closure};
-            foreach (var (token, arg) in _declaration.parameters.Zip(arguments, ValueTuple.Create))
+            foreach (var (token, arg) in _parameters.Zip(arguments, ValueTuple.Create))
             {
                 funcEnv.Define(token.Lexeme, arg);
             }
 
             try
             {
-                interpreter.ExecuteBlock(_declaration.body.Statements, funcEnv);
+                interpreter.ExecuteBlock(_body.Statements, funcEnv);
             }
             catch (ReturnValue returnValue)
             {
@@ -44,6 +47,6 @@ namespace Runtime.Interpreting
 
 
         public override string ToString() 
-            => $"<func {_declaration.parameters.Count()}>";
+            => $"<func {_parameters.Count()}>";
     }
 }

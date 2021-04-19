@@ -1,8 +1,10 @@
 using System;
 using System.IO;
+using System.Linq;
 using Runtime.Interpreting;
 using Runtime.Lexing;
 using Runtime.Parsing;
+using Runtime.SemanticAnalysis;
 
 namespace SharpLox
 {
@@ -71,7 +73,11 @@ namespace SharpLox
             var parser = new Parser(tokens, ParseError, isRepl);
             try
             {
-                var ast = parser.Parse();
+                var ast = parser.Parse().ToList();
+                
+                var resolver = new NameResolver(_interpreter, ParseError);
+                resolver.Resolve(ast);
+                
                 if (ErrorState)
                 {
                     return;

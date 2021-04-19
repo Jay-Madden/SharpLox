@@ -11,7 +11,6 @@ namespace Runtime.Parsing
         public T VisitLiteral(Literal literal);
         public T VisitUnary(Unary unary);
         public T VisitExpressionStatement(ExpressionStatement expressionStatement);
-        public T VisitPrintStatement(PrintStatement printStatement);
         public T VisitVariableStatement(VariableStatement variableStatement);
         public T VisitVariableAccess(VariableAccess variableAccess);
         public T VisitVariableAssign(VariableAssign variableAssign);
@@ -21,6 +20,7 @@ namespace Runtime.Parsing
         public T VisitWhile(WhileStatement whileStatement);
         public T VisitBreakStatement(BreakStatement breakStatement);
         public T VisitCall(Call call);
+        public T VisitLambda(Lambda lambda);
         public T VisitFuncDeclaration(FuncDeclaration funcDeclaration);
         public T VisitReturnStatement(ReturnStatement returnStatement);
     }

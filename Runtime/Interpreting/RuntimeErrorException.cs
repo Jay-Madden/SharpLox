@@ -8,7 +8,7 @@ namespace Runtime.Interpreting
         public Token? Token { get; }
 
         public RuntimeErrorException(Token? token, string message)
-            : base(message)
+            : base($"Error: {message})")
         {
             Token = token;
         }
