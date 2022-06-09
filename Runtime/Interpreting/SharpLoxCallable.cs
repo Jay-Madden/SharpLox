@@ -27,15 +27,19 @@ namespace Runtime.Interpreting
 
         public object Call(Interpreter interpreter, IEnumerable<object> arguments)
         {
-            var funcEnv = new LoxEnvironment{Parent = _closure};
+            // Function arguments get their own environment
+            var funcArgEnv = new LoxEnvironment{Parent = _closure};
             foreach (var (token, arg) in _parameters.Zip(arguments, ValueTuple.Create))
             {
-                funcEnv.Define(token.Lexeme, arg);
+                funcArgEnv.Define(token.Lexeme, arg);
             }
+
+            // the body gets a new environment with the parent set to the func args one
+            var bodyEnv = new LoxEnvironment {Parent = funcArgEnv};
 
             try
             {
-                interpreter.ExecuteBlock(_body.Statements, funcEnv);
+                interpreter.ExecuteBlock(_body.Statements, bodyEnv);
             }
             catch (ReturnValue returnValue)
             {

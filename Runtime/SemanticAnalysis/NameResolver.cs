@@ -6,6 +6,7 @@ using Runtime.Interpreting;
 using Runtime.Lexing;
 using Runtime.Parsing;
 using Runtime.Parsing.Productions;
+using Expression = Runtime.Parsing.Productions.Expression;
 
 namespace Runtime.SemanticAnalysis
 {
@@ -89,7 +90,7 @@ namespace Runtime.SemanticAnalysis
 
         public object? VisitVariableAssign(VariableAssign variableAssign)
         {
-            Resolve(variableAssign);
+            Resolve(variableAssign.Expression);
             ResolveLocal(variableAssign.Identifier, variableAssign);
             return null;
         }
@@ -141,7 +142,7 @@ namespace Runtime.SemanticAnalysis
 
         public object? VisitLambda(Lambda lambda)
         {
-            Resolve(lambda.Body);
+            ResolveLambda(lambda, FunctionType.Function);
             return null;
         }
 
@@ -187,38 +188,48 @@ namespace Runtime.SemanticAnalysis
             }
             
             _scopes.Peek()[name.Lexeme] = true;
-            
         }
 
         private void ResolveLocal(Token name, Expression expression)
         {
             var scopesList = _scopes.ToList();
-            for (var i = scopesList.Count - 1; i >= 0; i--) {
+            for (var i = 0; i < scopesList.Count; i++) {
                 if (scopesList[i].ContainsKey(name.Lexeme)) {
-                    _interpreter.Resolve(expression, scopesList.Count - 1 - i);
+                    _interpreter.Resolve(expression, i);
                     return;
                 }
             }
         }
 
+        private void ResolveLambda(Lambda lambda, FunctionType type)
+        {
+            ResolveCallable(lambda.Parameters, lambda.Body, type);
+        }
+        
         private void ResolveFunction(FuncDeclaration func, FunctionType type)
+        {
+            ResolveCallable(func.parameters, func.body, type);
+        }
+
+        private void ResolveCallable(IEnumerable<Token> tokens, Block body, FunctionType type)
         {
             var enclosing = _currentFunction;
             _currentFunction = type;
             
             BeginScope();
-            foreach (var token in func.parameters)
+            foreach (var token in tokens)
             {
                Declare(token); 
                Define(token);
             }
-            Resolve(func.body);
+            Resolve(body);
             
             _currentFunction = enclosing;
             
             EndScope();
+
         }
-        
+
         public void Resolve(IEnumerable<Node> statements) {
             foreach (var statement in statements) 
             {

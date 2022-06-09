@@ -164,6 +164,7 @@ namespace Runtime.Lexing
 
             return CreateToken(TokenType.Number, _currentLexeme);
         }
+        
         private Token Comment()
         {
             if(PeekAhead() == TokenChars.Slash)
@@ -175,10 +176,11 @@ namespace Runtime.Lexing
                 }
                 return CreateToken(TokenType.Comment);
             }
-            else if (PeekAhead() == TokenChars.Star)
+
+            if (PeekAhead() == TokenChars.Star)
             {
                 Advance();
-                while (!_isAtEnd && PeekAhead() != TokenChars.Star && PeekNext() != TokenChars.Slash)
+                while (!_isAtEnd && !(PeekAhead() == TokenChars.Star && PeekNext() == TokenChars.Slash))
                 {
                     Advance();
                 }

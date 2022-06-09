@@ -74,7 +74,7 @@ namespace Runtime.Parsing
 
             Consume(TokenType.LeftParen, "Expected '(' after function name");
 
-            while (!Check(TokenType.RightParen))
+            if (!Check(TokenType.RightParen))
             {
                 do
                 {
@@ -435,7 +435,7 @@ namespace Runtime.Parsing
 
                 Consume(TokenType.LeftParen, "Expected '(' after Lambda declaration");
 
-                while (!Check(TokenType.RightParen))
+                if (!Check(TokenType.RightParen))
                 {
                     do
                     {

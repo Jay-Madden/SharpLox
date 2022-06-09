@@ -63,6 +63,6 @@ namespace Runtime.Interpreting
         }
 
         public void AssignAt(int depth, Token name, object val)
-            => WalkParents(depth)._values.Add(name.Lexeme, val);
+            => WalkParents(depth)._values[name.Lexeme] = val;
     }
 }

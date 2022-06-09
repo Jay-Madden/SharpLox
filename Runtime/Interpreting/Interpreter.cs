@@ -148,7 +148,7 @@ namespace Runtime.Interpreting
         {
             var value = Evaluate(variableAssign.Expression);
             
-            if (_locals.TryGetValue(variableAssign.Expression, out var dist))
+            if (_locals.TryGetValue(variableAssign, out var dist))
             {  
                 _loxEnvironment.AssignAt(dist, variableAssign.Identifier, value);
             }
@@ -236,12 +236,14 @@ namespace Runtime.Interpreting
 
         public object VisitLambda(Lambda lambda)
         {
-            return new SharpLoxCallable(lambda.Parameters, lambda.Body, _loxEnvironment);
+            return new SharpLoxCallable(lambda.Parameters, lambda.Body,
+                new LoxEnvironment{Parent = _loxEnvironment});
         }
 
         public object VisitFuncDeclaration(FuncDeclaration funcDeclaration)
         {
-            var func = new SharpLoxCallable(funcDeclaration.parameters, funcDeclaration.body, _loxEnvironment);
+            var func = new SharpLoxCallable(funcDeclaration.parameters, funcDeclaration.body,
+                new LoxEnvironment {Parent = _loxEnvironment});
             _loxEnvironment.Define(funcDeclaration.name.Lexeme, func);
             return null!;
         }

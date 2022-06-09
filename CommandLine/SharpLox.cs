@@ -32,7 +32,7 @@ namespace SharpLox
 
         private static void RunFile(string path)
         {
-            var prog = File.ReadAllText(Path.GetFullPath(path));
+            var prog = File.ReadAllText(path);
             Run(prog, false);
             if (ErrorState)
             {
