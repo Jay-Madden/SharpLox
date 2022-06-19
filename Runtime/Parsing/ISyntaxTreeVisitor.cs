@@ -13,6 +13,7 @@ namespace Runtime.Parsing
         public T VisitExpressionStatement(ExpressionStatement expressionStatement);
         public T VisitVariableStatement(VariableStatement variableStatement);
         public T VisitVariableAccess(VariableAccess variableAccess);
+        public T VisitPropertySet(PropertySet set);
         public T VisitVariableAssign(VariableAssign variableAssign);
         public T VisitBlock(Block block);
         public T VisitIfStatement(IfStatement ifStatement);
@@ -20,7 +21,9 @@ namespace Runtime.Parsing
         public T VisitWhile(WhileStatement whileStatement);
         public T VisitBreakStatement(BreakStatement breakStatement);
         public T VisitCall(Call call);
+        public T VisitPropertyGet(PropertyGet get);
         public T VisitLambda(Lambda lambda);
+        public T VisitClassDeclaration(ClassDeclaration classDeclaration);
         public T VisitFuncDeclaration(FuncDeclaration funcDeclaration);
         public T VisitReturnStatement(ReturnStatement returnStatement);
     }

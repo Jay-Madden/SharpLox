@@ -88,6 +88,13 @@ namespace Runtime.SemanticAnalysis
             return null;
         }
 
+        public object? VisitPropertySet(PropertySet set)
+        {
+            Declare(set.Identifier);
+            Define(set.Identifier);
+            return null;
+        }
+
         public object? VisitVariableAssign(VariableAssign variableAssign)
         {
             Resolve(variableAssign.Expression);
@@ -140,9 +147,22 @@ namespace Runtime.SemanticAnalysis
             return null;
         }
 
+        public object? VisitPropertyGet(PropertyGet get)
+        {
+            Resolve(get.Expression);
+            return null;
+        }
+
         public object? VisitLambda(Lambda lambda)
         {
             ResolveLambda(lambda, FunctionType.Function);
+            return null;
+        }
+
+        public object? VisitClassDeclaration(ClassDeclaration classDeclaration)
+        {
+            Declare(classDeclaration.Name);
+            Define(classDeclaration.Name);
             return null;
         }
 

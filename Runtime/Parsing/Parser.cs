@@ -48,11 +48,17 @@ namespace Runtime.Parsing
         {
             try
             {
+                if (Match(TokenType.Class))
+                {
+                    return ParseClassDeclaration();
+                }
+                
                 if (Match(TokenType.Func))
                 {
                     return ParseFuncDeclaration();
                 }
-                else if (Match(TokenType.Var))
+
+                if (Match(TokenType.Var))
                 {
                     return ParseVariableDeclaration();
                 }
@@ -64,6 +70,25 @@ namespace Runtime.Parsing
                 Synchronize();
                 return null;
             }
+        }
+
+        private Node ParseClassDeclaration()
+        {
+            var name = Consume(TokenType.Identifier, "Expected class name");
+
+            var methods = new List<Node>();
+
+            Consume(TokenType.LeftBrace, "Expected '{' after class name");
+
+            while (!Check(TokenType.RightBrace) && !_isAtEnd)
+            {
+                Consume(TokenType.Func, "Expected 'func' keyword at start method");
+                var method = ParseFuncDeclaration();
+                methods.Add(method);
+            }
+            Consume(TokenType.RightBrace, "Expected '{' after class declaration");
+
+            return new ClassDeclaration(name!, methods);
         }
 
         private Node ParseFuncDeclaration()
@@ -310,6 +335,12 @@ namespace Runtime.Parsing
                     var name = access.Name;
                     return new VariableAssign(name, value);
                 }
+                
+                if (expression is PropertyGet get)
+                {
+                    var name = get.Identifier;
+                    return new PropertySet(get.Expression, name, value);
+                }
 
                 _errorCallBack(equals, "Invalid Assignment Target");
             }
@@ -467,6 +498,11 @@ namespace Runtime.Parsing
                 if (Match(TokenType.LeftParen))
                 {
                     expression = ParseArguments(expression);
+                }
+                else if (Match(TokenType.Dot))
+                {
+                    var name = Consume(TokenType.Identifier, "Expected identifier after '.'");
+                    expression = new PropertyGet(name!, expression);
                 }
                 else
                 {

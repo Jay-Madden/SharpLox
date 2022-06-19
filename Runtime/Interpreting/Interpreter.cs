@@ -144,6 +144,21 @@ namespace Runtime.Interpreting
             return ResolveVariable(variableAccess.Name, variableAccess);
         }
 
+        public object VisitPropertySet(PropertySet set)
+        {
+            var name = Evaluate(set.Name);
+
+            if (name is not SharpLoxInstance instance)
+            {
+                throw new RuntimeErrorException(set.Identifier, "Only instances can have fields");
+            }
+            
+            var val = Evaluate(set.Value);
+            
+            instance.Set(set.Identifier, val);
+            return val;
+        }
+
         public object VisitVariableAssign(VariableAssign variableAssign)
         {
             var value = Evaluate(variableAssign.Expression);
@@ -234,10 +249,30 @@ namespace Runtime.Interpreting
             return func.Call(this, args);
         }
 
+        public object VisitPropertyGet(PropertyGet get)
+        {
+            var val = Evaluate(get.Expression);
+
+            if (val is not SharpLoxInstance instance)
+            {
+                throw new RuntimeErrorException(get.Identifier, "Only instances can have properties");
+            }
+
+            return instance.Get(get.Identifier);
+        }
+
         public object VisitLambda(Lambda lambda)
         {
             return new SharpLoxCallable(lambda.Parameters, lambda.Body,
                 new LoxEnvironment{Parent = _loxEnvironment});
+        }
+
+        public object VisitClassDeclaration(ClassDeclaration classDeclaration)
+        {
+            _loxEnvironment.Define(classDeclaration.Name.Lexeme);
+            var c = new SharpLoxClass(classDeclaration.Name.Lexeme);
+            _loxEnvironment.Assign(classDeclaration.Name, c);
+            return null!;
         }
 
         public object VisitFuncDeclaration(FuncDeclaration funcDeclaration)
