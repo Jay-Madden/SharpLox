@@ -186,7 +186,10 @@ namespace Runtime.SemanticAnalysis
             
             foreach (var func in classDeclaration.Methods.Cast<FuncDeclaration>())
             {
-                var type = FunctionType.Method;
+                var type = func.Name.Lexeme == "init" 
+                    ? FunctionType.Initializer 
+                    : FunctionType.Method;
+                
                 ResolveFunction(func, type);
             }
             
