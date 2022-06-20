@@ -4,11 +4,11 @@ using Runtime.Lexing;
 
 namespace Runtime.Interpreting
 {
-    public class LoxEnvironment
+    public class SharpLoxEnvironment
     {
         private readonly Dictionary<string, object?> _values = new();
         
-        public LoxEnvironment? Parent { get; init; }
+        public SharpLoxEnvironment? Parent { get; init; }
 
         public void Define(string name, object? value=null)
         {
@@ -41,7 +41,7 @@ namespace Runtime.Interpreting
         public object GetAt(int depth, Token name)
             => WalkParents(depth).Get(name);
 
-        private LoxEnvironment WalkParents(int distance)
+        private SharpLoxEnvironment WalkParents(int distance)
         {
             var env = this;
             for (var i = 0; i < distance; i++)

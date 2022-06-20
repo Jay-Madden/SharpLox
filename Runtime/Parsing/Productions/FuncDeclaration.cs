@@ -5,7 +5,7 @@ using Runtime.Lexing;
 
 namespace Runtime.Parsing.Productions
 {
-    public record FuncDeclaration(Token name, IEnumerable<Token> parameters, Block body) : Statement
+    public record FuncDeclaration(Token Name, IEnumerable<Token> Parameters, Block Body) : Statement
     {
         public override T Accept<T>(ISyntaxTreeVisitor<T> visitor)
         {
@@ -16,9 +16,9 @@ namespace Runtime.Parsing.Productions
         {
             var newIndent = ShowIndent(indent, last);
 
-            var args = string.Join(", ", parameters.Select(x => x.Lexeme));
-            Console.WriteLine($"{GetType().Name}: {name.Lexeme} args={args}");
-            body.PrintNode(newIndent, false);
+            var args = string.Join(", ", Parameters.Select(x => x.Lexeme));
+            Console.WriteLine($"{GetType().Name}: {Name.Lexeme} args={args}");
+            Body.PrintNode(newIndent, false);
         }
     }
 }

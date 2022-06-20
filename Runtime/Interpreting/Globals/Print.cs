@@ -8,7 +8,7 @@ namespace Runtime.Interpreting.Globals
     {
         public object Call(Interpreter interpreter, IEnumerable<object> arguments)
         {
-            Console.WriteLine(arguments.First().ToString());
+            Console.WriteLine(arguments.FirstOrDefault()?.ToString() ?? "Nil");
             return null!;
         }
 

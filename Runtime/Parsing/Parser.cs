@@ -545,10 +545,12 @@ namespace Runtime.Parsing
             {
                 return new Literal(false);
             }
+            
             if (Match(TokenType.True))
             {
                 return new Literal(true);
             }
+            
             if (Match(TokenType.Nil))
             {
                 return new Literal(null!);
@@ -558,6 +560,7 @@ namespace Runtime.Parsing
             {
                 return new Literal(double.Parse((string)Previous().Literal));
             }
+            
             if(Match(TokenType.String))
             {
                 return new Literal(Previous().Literal);
@@ -568,6 +571,11 @@ namespace Runtime.Parsing
                 var expr = ParseExpression();
                 Consume(TokenType.RightParen, "Expect ')' after expression.");
                 return new Grouping(expr);
+            }
+
+            if (Match(TokenType.This))
+            {
+                return new This(Previous());
             }
             
             _errorCallBack(Peek(), "Expected Expression");

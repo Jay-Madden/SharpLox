@@ -16,19 +16,19 @@ namespace Runtime.Interpreting
     public class Interpreter : ISyntaxTreeVisitor<object>
     {
 
-        private readonly LoxEnvironment _loxGlobals = new();
+        private readonly SharpLoxEnvironment _sharpLoxGlobals = new();
         
         private readonly Dictionary<Expression, int> _locals = new(ReferenceEqualityComparer.Instance);
 
-        private LoxEnvironment _loxEnvironment;
+        private SharpLoxEnvironment _sharpLoxEnvironment;
 
         public Interpreter()
         {
-            _loxEnvironment = _loxGlobals;
+            _sharpLoxEnvironment = _sharpLoxGlobals;
             
-            _loxGlobals.Define(NativeFunctions.Clock, new Clock());
-            _loxGlobals.Define(NativeFunctions.Input, new Input());
-            _loxGlobals.Define(NativeFunctions.Print, new Print());
+            _sharpLoxGlobals.Define(NativeFunctions.Clock, new Clock());
+            _sharpLoxGlobals.Define(NativeFunctions.Input, new Input());
+            _sharpLoxGlobals.Define(NativeFunctions.Print, new Print());
         }
         
         private bool _isBreak;
@@ -47,13 +47,13 @@ namespace Runtime.Interpreting
             }
         }
         
-        public void ExecuteBlock(IEnumerable<Node> statements, LoxEnvironment environment)
+        public void ExecuteBlock(IEnumerable<Node> statements, SharpLoxEnvironment environment)
         {
-            var prev = _loxEnvironment;
+            var prev = _sharpLoxEnvironment;
 
             try
             {
-                _loxEnvironment = environment;
+                _sharpLoxEnvironment = environment;
                 foreach (var stmt in statements)
                 {
                     Evaluate(stmt);
@@ -65,7 +65,7 @@ namespace Runtime.Interpreting
             }
             finally
             {
-                _loxEnvironment = prev;
+                _sharpLoxEnvironment = prev;
             }
         }
         
@@ -127,6 +127,11 @@ namespace Runtime.Interpreting
             return null!;
         }
 
+        public object VisitThisExpression(This @this)
+        {
+            return ResolveVariable(@this.Keyword, @this);
+        }
+
         public object VisitVariableStatement(VariableStatement variableStatement)
         {
             object? value = null;
@@ -135,7 +140,7 @@ namespace Runtime.Interpreting
                 value = Evaluate(variableStatement.Expression);
             }
             
-            _loxEnvironment.Define(variableStatement.Identifier.Lexeme, value);
+            _sharpLoxEnvironment.Define(variableStatement.Identifier.Lexeme, value);
             return null!;
         }
 
@@ -165,18 +170,18 @@ namespace Runtime.Interpreting
             
             if (_locals.TryGetValue(variableAssign, out var dist))
             {  
-                _loxEnvironment.AssignAt(dist, variableAssign.Identifier, value);
+                _sharpLoxEnvironment.AssignAt(dist, variableAssign.Identifier, value);
             }
             else
             {
-                _loxGlobals.Assign(variableAssign.Identifier, value);
+                _sharpLoxGlobals.Assign(variableAssign.Identifier, value);
             }
             return value;
         }
 
         public object VisitBlock(Block block)
         {
-            ExecuteBlock(block.Statements, new LoxEnvironment{Parent = _loxEnvironment});
+            ExecuteBlock(block.Statements, new SharpLoxEnvironment{Parent = _sharpLoxEnvironment});
             return null!;
         }
 
@@ -264,22 +269,30 @@ namespace Runtime.Interpreting
         public object VisitLambda(Lambda lambda)
         {
             return new SharpLoxCallable(lambda.Parameters, lambda.Body,
-                new LoxEnvironment{Parent = _loxEnvironment});
+                new SharpLoxEnvironment{Parent = _sharpLoxEnvironment}, false);
         }
 
         public object VisitClassDeclaration(ClassDeclaration classDeclaration)
         {
-            _loxEnvironment.Define(classDeclaration.Name.Lexeme);
-            var c = new SharpLoxClass(classDeclaration.Name.Lexeme);
-            _loxEnvironment.Assign(classDeclaration.Name, c);
+            _sharpLoxEnvironment.Define(classDeclaration.Name.Lexeme);
+            
+            var methods = classDeclaration.Methods
+                .Cast<FuncDeclaration>()
+                .ToDictionary(
+                    x => x.Name.Lexeme,
+                    y => new SharpLoxCallable(y.Parameters, y.Body, _sharpLoxEnvironment, y.Name.Lexeme == "init")
+                );
+            
+            var c = new SharpLoxClass(classDeclaration.Name.Lexeme, methods);
+            _sharpLoxEnvironment.Assign(classDeclaration.Name, c);
             return null!;
         }
 
         public object VisitFuncDeclaration(FuncDeclaration funcDeclaration)
         {
-            var func = new SharpLoxCallable(funcDeclaration.parameters, funcDeclaration.body,
-                new LoxEnvironment {Parent = _loxEnvironment});
-            _loxEnvironment.Define(funcDeclaration.name.Lexeme, func);
+            var func = new SharpLoxCallable(funcDeclaration.Parameters, funcDeclaration.Body,
+                new SharpLoxEnvironment {Parent = _sharpLoxEnvironment}, false);
+            _sharpLoxEnvironment.Define(funcDeclaration.Name.Lexeme, func);
             return null!;
         }
 
@@ -300,9 +313,9 @@ namespace Runtime.Interpreting
         {
             if (_locals.TryGetValue(expression, out var val))
             {
-                return _loxEnvironment.GetAt(val, name);
+                return _sharpLoxEnvironment.GetAt(val, name);
             }
-            return _loxGlobals.Get(name);
+            return _sharpLoxGlobals.Get(name);
         }
 
         private object Evaluate<T>(T value) where T: Node

@@ -19,6 +19,8 @@ namespace Runtime.SemanticAnalysis
         private readonly Action<Token, string> _errorCallBack;
 
         private FunctionType _currentFunction = FunctionType.None;
+
+        private ClassType _currentClass = ClassType.None;
         
         public NameResolver(Interpreter interpreter, Action<Token, string> errorCallBack )
         {
@@ -63,7 +65,19 @@ namespace Runtime.SemanticAnalysis
             Resolve(expressionStatement.Expression);
             return null;
         }
-        
+
+        public object? VisitThisExpression(This @this)
+        {
+            if (_currentClass == ClassType.None)
+            {
+                _errorCallBack(@this.Keyword, "Can not access 'this' outside of a class");
+                return null;
+            }
+            
+            ResolveLocal(@this.Keyword, @this);
+            return null;
+        }
+
         public object? VisitVariableStatement(VariableStatement variableStatement)
         {
             Declare(variableStatement.Identifier);
@@ -90,8 +104,8 @@ namespace Runtime.SemanticAnalysis
 
         public object? VisitPropertySet(PropertySet set)
         {
-            Declare(set.Identifier);
-            Define(set.Identifier);
+            Resolve(set.Name);
+            Resolve(set.Value);
             return null;
         }
 
@@ -163,13 +177,30 @@ namespace Runtime.SemanticAnalysis
         {
             Declare(classDeclaration.Name);
             Define(classDeclaration.Name);
+
+            var tempClass = _currentClass;
+            _currentClass = ClassType.Class;
+            
+            BeginScope();
+            _scopes.Peek()["this"] = true;
+            
+            foreach (var func in classDeclaration.Methods.Cast<FuncDeclaration>())
+            {
+                var type = FunctionType.Method;
+                ResolveFunction(func, type);
+            }
+            
+            EndScope();
+
+            _currentClass = tempClass;
+            
             return null;
         }
 
         public object? VisitFuncDeclaration(FuncDeclaration funcDeclaration)
         {
-            Declare(funcDeclaration.name);
-            Define(funcDeclaration.name);
+            Declare(funcDeclaration.Name);
+            Define(funcDeclaration.Name);
 
             ResolveFunction(funcDeclaration, FunctionType.Function);
             return null;
@@ -179,6 +210,11 @@ namespace Runtime.SemanticAnalysis
         {
             if (_currentFunction == FunctionType.None) {
                 _errorCallBack(returnStatement.Keyword, "Can't return from top-level code.");
+            }
+
+            if (_currentFunction == FunctionType.Initializer)
+            {
+                _errorCallBack(returnStatement.Keyword, "Can't return from an initializer.");
             }
             
             if (returnStatement.Value is not null)
@@ -228,7 +264,7 @@ namespace Runtime.SemanticAnalysis
         
         private void ResolveFunction(FuncDeclaration func, FunctionType type)
         {
-            ResolveCallable(func.parameters, func.body, type);
+            ResolveCallable(func.Parameters, func.Body, type);
         }
 
         private void ResolveCallable(IEnumerable<Token> tokens, Block body, FunctionType type)

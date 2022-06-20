@@ -11,6 +11,7 @@ namespace Runtime.Parsing
         public T VisitLiteral(Literal literal);
         public T VisitUnary(Unary unary);
         public T VisitExpressionStatement(ExpressionStatement expressionStatement);
+        public T VisitThisExpression(This @this);
         public T VisitVariableStatement(VariableStatement variableStatement);
         public T VisitVariableAccess(VariableAccess variableAccess);
         public T VisitPropertySet(PropertySet set);
