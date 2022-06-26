@@ -4,7 +4,7 @@ using Runtime.Lexing;
 
 namespace Runtime.Parsing.Productions;
 
-public record ClassDeclaration(Token Name, IEnumerable<Node> Methods) : Node
+public record ClassDeclaration(Token Name, VariableAccess? SuperClass, IEnumerable<Node> Methods) : Node
 {
     public override T Accept<T>(ISyntaxTreeVisitor<T> visitor)
     {

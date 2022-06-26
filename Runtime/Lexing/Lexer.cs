@@ -115,9 +115,9 @@ namespace Runtime.Lexing
                     return CreateToken(TokenType.NewLine);
                 case TokenChars.DoubleQuote:
                     return String();
-                case { } c when char.IsDigit(c):
+                case var c when char.IsDigit(c):
                     return Number();
-                case { } c when char.IsLetter(c):
+                case var c when char.IsLetter(c):
                     return Identifier();
                 default:
                     _errorHandler(_line, "Unexpected Character");

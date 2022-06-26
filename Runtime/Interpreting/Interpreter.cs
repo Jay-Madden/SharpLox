@@ -164,6 +164,26 @@ namespace Runtime.Interpreting
             return val;
         }
 
+        public object VisitSuperExpression(Super super)
+        {
+            var distance = _locals[super];
+
+            var superClass = (SharpLoxClass)_sharpLoxEnvironment.GetAt(distance,
+                new Token(TokenType.Identifier, "super", null!, 0));
+
+            var instance = (SharpLoxInstance)_sharpLoxEnvironment.GetAt(distance - 1,
+                new Token(TokenType.Identifier, "this", null!, 0));
+
+            var method = superClass.GetMethod(super.method);
+
+            if (method is null)
+            {
+                throw new RuntimeErrorException(super.keyword, "Method does not exist on super class");
+            }
+            
+            return method.Bind(instance);
+        }
+
         public object VisitVariableAssign(VariableAssign variableAssign)
         {
             var value = Evaluate(variableAssign.Expression);
@@ -275,6 +295,19 @@ namespace Runtime.Interpreting
         public object VisitClassDeclaration(ClassDeclaration classDeclaration)
         {
             _sharpLoxEnvironment.Define(classDeclaration.Name.Lexeme);
+
+            object? super = null;
+            if (classDeclaration.SuperClass is not null)
+            {
+                super = Evaluate(classDeclaration.SuperClass);
+                if (super is not SharpLoxClass)
+                {
+                    throw new RuntimeErrorException(classDeclaration.SuperClass.Name, "Inherited object must be a class");
+                }
+
+                _sharpLoxEnvironment = new SharpLoxEnvironment {Parent = _sharpLoxEnvironment};
+                _sharpLoxEnvironment.Define("super", super);
+            }
             
             var methods = classDeclaration.Methods
                 .Cast<FuncDeclaration>()
@@ -283,7 +316,14 @@ namespace Runtime.Interpreting
                     y => new SharpLoxCallable(y.Parameters, y.Body, _sharpLoxEnvironment, y.Name.Lexeme == "init")
                 );
             
-            var c = new SharpLoxClass(classDeclaration.Name.Lexeme, methods);
+            var c = new SharpLoxClass(classDeclaration.Name.Lexeme, (SharpLoxClass)super!, methods);
+            
+            
+            if (classDeclaration.SuperClass is not null)
+            {
+                _sharpLoxEnvironment = _sharpLoxEnvironment.Parent!;
+            }
+            
             _sharpLoxEnvironment.Assign(classDeclaration.Name, c);
             return null!;
         }

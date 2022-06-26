@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Data.Common;
 using Runtime.Lexing;
 using SSEHub.Core.Extensions;
 
@@ -10,6 +11,8 @@ public class SharpLoxClass : ICallable
 
     public int Arity => _methods.TryGetValue("init", out var init) ? init.Arity : 0;
 
+    private readonly SharpLoxClass? _superClass;
+    
     private readonly Dictionary<string, SharpLoxCallable> _methods;
 
     public SharpLoxClass(string name, Dictionary<string, SharpLoxCallable> methods)
@@ -17,10 +20,24 @@ public class SharpLoxClass : ICallable
         Name = name;
         _methods = methods;
     }
+    
+    public SharpLoxClass(string name, SharpLoxClass super, Dictionary<string, SharpLoxCallable> methods)
+    {
+        Name = name;
+        _superClass = super;
+        _methods = methods;
+    }
 
     public SharpLoxCallable? GetMethod(Token name)
     {
-        return _methods.GetOrDefault(name.Lexeme);
+        var method = _methods.GetOrDefault(name.Lexeme);
+
+        if (method is null && _superClass is not null)
+        {
+            method = _superClass.GetMethod(name);
+        }
+
+        return method;
     }
     
     public override string ToString() 

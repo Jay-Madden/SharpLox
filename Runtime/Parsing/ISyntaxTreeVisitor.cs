@@ -15,6 +15,7 @@ namespace Runtime.Parsing
         public T VisitVariableStatement(VariableStatement variableStatement);
         public T VisitVariableAccess(VariableAccess variableAccess);
         public T VisitPropertySet(PropertySet set);
+        public T VisitSuperExpression(Super super);
         public T VisitVariableAssign(VariableAssign variableAssign);
         public T VisitBlock(Block block);
         public T VisitIfStatement(IfStatement ifStatement);

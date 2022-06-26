@@ -109,6 +109,21 @@ namespace Runtime.SemanticAnalysis
             return null;
         }
 
+        public object? VisitSuperExpression(Super super)
+        {
+            if (_currentClass == ClassType.None)
+            {
+                _errorCallBack(super.keyword, "Can not call super in top level code");
+            }
+            
+            if (_currentClass == ClassType.Class)
+            {
+                _errorCallBack(super.keyword, "Can not call super in a class with no superclass");
+            }
+            ResolveLocal(super.keyword, super);
+            return null;
+        }
+
         public object? VisitVariableAssign(VariableAssign variableAssign)
         {
             Resolve(variableAssign.Expression);
@@ -180,19 +195,40 @@ namespace Runtime.SemanticAnalysis
 
             var tempClass = _currentClass;
             _currentClass = ClassType.Class;
-            
+
+            if (classDeclaration.SuperClass is not null &&
+                classDeclaration.SuperClass.Name.Lexeme == classDeclaration.Name.Lexeme)
+            {
+                _errorCallBack(classDeclaration.SuperClass.Name, "A class cannot inherit from itself");
+            }
+
+            if (classDeclaration.SuperClass is not null)
+            {
+                _currentClass = ClassType.SubClass;
+                Resolve(classDeclaration.SuperClass);
+                BeginScope();
+
+                _scopes.Peek().Add("super", true);
+            }
+
+
             BeginScope();
             _scopes.Peek()["this"] = true;
-            
+
             foreach (var func in classDeclaration.Methods.Cast<FuncDeclaration>())
             {
-                var type = func.Name.Lexeme == "init" 
-                    ? FunctionType.Initializer 
+                var type = func.Name.Lexeme == "init"
+                    ? FunctionType.Initializer
                     : FunctionType.Method;
-                
+
                 ResolveFunction(func, type);
             }
-            
+
+            if (classDeclaration.SuperClass is not null)
+            {
+                EndScope();
+            }
+
             EndScope();
 
             _currentClass = tempClass;

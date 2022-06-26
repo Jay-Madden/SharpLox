@@ -76,6 +76,13 @@ namespace Runtime.Parsing
         {
             var name = Consume(TokenType.Identifier, "Expected class name");
 
+            VariableAccess? super = null;
+            if (Match(TokenType.Colon))
+            {
+                Consume(TokenType.Identifier, "Expected Superclass identifier");
+                super = new VariableAccess(Previous());
+            }
+
             var methods = new List<Node>();
 
             Consume(TokenType.LeftBrace, "Expected '{' after class name");
@@ -88,7 +95,7 @@ namespace Runtime.Parsing
             }
             Consume(TokenType.RightBrace, "Expected '{' after class declaration");
 
-            return new ClassDeclaration(name!, methods);
+            return new ClassDeclaration(name!, super, methods);
         }
 
         private Node ParseFuncDeclaration()
@@ -576,6 +583,14 @@ namespace Runtime.Parsing
             if (Match(TokenType.This))
             {
                 return new This(Previous());
+            }
+
+            if (Match(TokenType.Super))
+            {
+                var keyword = Previous();
+                Consume(TokenType.Dot, "Expected '.' after super keyword");
+                var method = Consume(TokenType.Identifier, "Expect superclass method name");
+                return new Super(keyword, method!);
             }
             
             _errorCallBack(Peek(), "Expected Expression");
