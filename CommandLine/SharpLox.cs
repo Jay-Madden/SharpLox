@@ -75,6 +75,11 @@ namespace SharpLox
             {
                 var ast = parser.Parse().ToList();
                 
+                if (ErrorState)
+                {
+                    return;
+                }
+                
                 var resolver = new NameResolver(_interpreter, ParseError);
                 resolver.Resolve(ast);
                 
